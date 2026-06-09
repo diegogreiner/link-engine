@@ -82,39 +82,29 @@ export class AuthService {
 
 	async refresh(refreshToken: string) {
 		try {
-			const payload = await this.jwt.verifyAsync(
-			refreshToken,
-			{
+			const payload = await this.jwt.verifyAsync(refreshToken, {
 				secret: process.env.JWT_REFRESH_SECRET,
-			},
-			);
+			});
 
-			const tokens =
-			await this.prisma.refreshToken.findMany({
+			const tokens = await this.prisma.refreshToken.findMany({
 				where: {
-				userId: payload.sub,
+					userId: payload.sub,
 				},
 			});
 
 			const validToken = await Promise.any(
-			tokens.map(async (token) => {
-				const match = await bcrypt.compare(
-				refreshToken,
-				token.token,
-				);
+				tokens.map(async (token) => {
+					const match = await bcrypt.compare(refreshToken, token.token);
 
-				return match ? token : Promise.reject();
-			}),
+					return match ? token : Promise.reject();
+				}),
 			);
 
 			if (!validToken) {
-			throw new UnauthorizedException();
+				throw new UnauthorizedException();
 			}
 
-			return this.generateTokens(
-			payload.sub,
-			payload.email,
-			);
+			return this.generateTokens(payload.sub, payload.email);
 		} catch {
 			throw new UnauthorizedException();
 		}
