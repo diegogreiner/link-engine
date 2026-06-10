@@ -6,7 +6,7 @@ import {
 import type { ConfigService } from "@nestjs/config";
 import type { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
-import type { PrismaService } from "src/prisma/service";
+import  { PrismaService } from "src/prisma/service";
 import type { LoginDto } from "./dto/login.dto";
 import type { RegisterDto } from "./dto/register.dto";
 

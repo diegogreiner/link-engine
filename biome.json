@@ -18,6 +18,9 @@
 			"recommended": true,
 			"correctness": {
 				"noUnusedVariables": "off"
+			},
+			"style": {
+				"useImportType": "off"
 			}
 		}
 	},

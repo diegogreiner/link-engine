@@ -14,7 +14,7 @@ import type { Response } from "express";
 import { JwtAuthGuard } from "src/auth/jwt/jwt-auth.guard";
 import type { CreateLinkDto } from "./dto/create-link.dto";
 import type { UpdateLinkDto } from "./dto/update-link.dto";
-import type { LinksService } from "./links.service";
+import { LinksService } from "./links.service";
 
 @Controller("links")
 export class LinksController {

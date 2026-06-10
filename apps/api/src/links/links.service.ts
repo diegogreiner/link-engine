@@ -1,6 +1,6 @@
 import { GoneException, Injectable, NotFoundException } from "@nestjs/common";
 import { nanoid } from "nanoid";
-import type { PrismaService } from "src/prisma/service";
+import { PrismaService } from "src/prisma/service";
 import type { CreateLinkDto } from "./dto/create-link.dto";
 import type { UpdateLinkDto } from "./dto/update-link.dto";
 
