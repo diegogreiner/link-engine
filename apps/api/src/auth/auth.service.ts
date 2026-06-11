@@ -3,18 +3,19 @@ import {
 	Injectable,
 	UnauthorizedException,
 } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
-import type { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
-import  { PrismaService } from "src/prisma/service";
-import type { LoginDto } from "./dto/login.dto";
-import type { RegisterDto } from "./dto/register.dto";
+import { PrismaService } from "src/prisma/service";
+import { LoginDto } from "./dto/login.dto";
+import { RegisterDto } from "./dto/register.dto";
 
 @Injectable()
 export class AuthService {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly jwt: JwtService,
+		private readonly configService: ConfigService,
 	) {}
 
 	async register(dto: RegisterDto) {
@@ -83,7 +84,7 @@ export class AuthService {
 	async refresh(refreshToken: string) {
 		try {
 			const payload = await this.jwt.verifyAsync(refreshToken, {
-				secret: process.env.JWT_REFRESH_SECRET,
+				secret: this.configService.get<string>("JWT_REFRESH_SECRET"),
 			});
 
 			const tokens = await this.prisma.refreshToken.findMany({
@@ -117,13 +118,13 @@ export class AuthService {
 		};
 
 		const accessToken = await this.jwt.signAsync(payload, {
-			secret: process.env.JWT_ACCESS_SECRET,
-			expiresIn: process.env.JWT_ACCESS_EXPIRES as any,
+			secret: this.configService.get<string>("JWT_ACCESS_SECRET"),
+			expiresIn: this.configService.get<string>("JWT_ACCESS_EXPIRES") as any,
 		});
 
 		const refreshToken = await this.jwt.signAsync(payload, {
-			secret: process.env.JWT_REFRESH_SECRET,
-			expiresIn: process.env.JWT_REFRESH_EXPIRES as any,
+			secret: this.configService.get<string>("JWT_REFRESH_SECRET"),
+			expiresIn: this.configService.get<string>("JWT_REFRESH_EXPIRES") as any,
 		});
 
 		const hashRefresh = await bcrypt.hash(refreshToken, 10);

@@ -1,10 +1,13 @@
+import { ApiProperty } from "@nestjs/swagger";
 import { IsDateString, IsOptional, IsUrl } from "class-validator";
 
 export class CreateLinkDto {
-	@IsUrl()
-	originalUrl: string;
+  @ApiProperty({ example: "https://google.com" })
+  @IsUrl()
+  originalUrl: string;
 
-	@IsOptional()
-	@IsDateString()
-	expiresAt?: string;
+  @ApiProperty({ example: "2025-12-31", required: false })
+  @IsOptional()
+  @IsDateString()
+  expiresAt?: string;
 }

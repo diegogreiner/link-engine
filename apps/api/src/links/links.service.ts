@@ -1,8 +1,8 @@
 import { GoneException, Injectable, NotFoundException } from "@nestjs/common";
 import { nanoid } from "nanoid";
 import { PrismaService } from "src/prisma/service";
-import type { CreateLinkDto } from "./dto/create-link.dto";
-import type { UpdateLinkDto } from "./dto/update-link.dto";
+import { CreateLinkDto } from "./dto/create-link.dto";
+import { UpdateLinkDto } from "./dto/update-link.dto";
 
 @Injectable()
 export class LinksService {
@@ -42,20 +42,29 @@ export class LinksService {
 	}
 
 	async findAll() {
-		return this.prisma.link.findMany({
+		const links = await this.prisma.link.findMany({
 			orderBy: {
 				createdAt: "desc",
 			},
 		});
+
+		return links.map((i) => ({
+			originalUrl: i.originalUrl,
+			shortCode: i.shortCode,
+		}));
 	}
 
-	async findOne(shortCode: string) {
+	async findOne(id: string) {
 		try {
-			return this.prisma.link.findUnique({
+			const link = await this.prisma.link.findUnique({
 				where: {
-					shortCode,
+					id,
 				},
 			});
+
+			const { userId } = link;
+
+			return link;
 		} catch (error) {
 			throw new NotFoundException("Nenhum link encontrado");
 		}
