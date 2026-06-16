@@ -1,6 +1,7 @@
 import { GoneException, Injectable, NotFoundException } from "@nestjs/common";
 import { nanoid } from "nanoid";
 import { PrismaService } from "src/prisma/service";
+import { UAParser } from "ua-parser-js";
 import { CreateLinkDto } from "./dto/create-link.dto";
 import { UpdateLinkDto } from "./dto/update-link.dto";
 
@@ -86,6 +87,54 @@ export class LinksService {
 		}
 
 		return link;
+	}
+
+	async registerAccess(
+		linkId: string,
+		data: { ip: string; userAgent: string; referer: string },
+	) {
+		try {
+			const parser = new UAParser(data?.userAgent);
+
+			const browser = parser.getBrowser();
+			const os = parser.getOS();
+			const device = parser.getDevice();
+
+			let country: string | null = null;
+			let city: string | null = null;
+
+			if (data.ip) {
+				try {
+					const response = await fetch(
+						`http://ip-api.com/json/${data.ip}?fields=status,country,city`,
+					);
+
+					const geo = await response.json();
+
+					if (geo.status === "success") {
+						country = geo.country;
+						city = geo.city;
+					}
+				} catch {}
+			}
+
+			await this.prisma.linkAccess.create({
+				data: {
+					linkId,
+					country,
+					city,
+					ip: data.ip,
+					referer: data.referer,
+					browser: browser.name,
+					browserVersion: browser.version,
+					os: os.name,
+					osVersion: os.version,
+					deviceType: device.type ?? "desktop",
+				},
+			});
+		} catch (error) {
+			console.error("Erro ao registrar analytics", error);
+		}
 	}
 
 	private async generateShortCode() {

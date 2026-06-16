@@ -27,15 +27,16 @@ model Click {
 }
 
 model Link {
-  id          String    @id @default(uuid())
-  originalUrl String
-  shortCode   String    @unique
-  expiresAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  userId      String
-  clicks      Click[]
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String       @id @default(uuid())
+  originalUrl  String
+  shortCode    String       @unique
+  expiresAt    DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  userId       String
+  clicks       Click[]
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkAccesses LinkAccess[]
 }
 
 model RefreshToken {
@@ -45,4 +46,31 @@ model RefreshToken {
   createdAt DateTime @default(now())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LinkAccess {
+  id String @id @default(uuid())
+
+  linkId String
+
+  ip      String?
+  referer String?
+
+  browser        String?
+  browserVersion String?
+
+  os        String?
+  osVersion String?
+
+  deviceType String?
+
+  country String?
+  city    String?
+
+  createdAt DateTime @default(now())
+
+  link Link @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@index([linkId])
+  @@index([createdAt])
 }
