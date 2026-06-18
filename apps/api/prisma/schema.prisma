@@ -17,15 +17,6 @@ model User {
   refreshTokens RefreshToken[]
 }
 
-model Click {
-  id        String   @id @default(uuid())
-  ip        String?
-  userAgent String?
-  createdAt DateTime @default(now())
-  linkId    String
-  link      Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
-}
-
 model Link {
   id           String       @id @default(uuid())
   originalUrl  String
@@ -34,7 +25,6 @@ model Link {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   userId       String
-  clicks       Click[]
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkAccesses LinkAccess[]
 }
