@@ -1,10 +1,8 @@
-import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth } from "@nestjs/swagger";
+import { Body, Controller, Post, Req } from "@nestjs/common";
 import { Request } from "express";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
-import { JwtAuthGuard } from "./jwt/jwt-auth.guard";
 
 @Controller("auth")
 export class AuthController {
