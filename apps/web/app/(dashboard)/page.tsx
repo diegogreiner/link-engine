@@ -188,7 +188,7 @@ export default function DashboardPage() {
                 links.slice(0, 5).map((link) => (
                   <TableRow key={link.shortCode}>
                     <TableCell className="font-medium text-gray-900">
-                      /{link.shortCode}
+                      {link.shortCode}
                     </TableCell>
                     <TableCell className="max-w-[300px] truncate text-gray-700">
                       {link.originalUrl}

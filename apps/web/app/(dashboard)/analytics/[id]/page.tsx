@@ -3,12 +3,12 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -16,6 +16,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  AlertCircle,
+  ExternalLink,
+  Globe,
+  Monitor,
+  MousePointerClick,
+  TrendingUp,
+} from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
 import {
@@ -32,7 +40,6 @@ import {
   DeviceData,
 } from "@/src/services/analytics-service";
 import { LinksService, Link } from "@/src/services/link-service";
-import { AlertCircle } from "lucide-react";
 
 const PERIODS = [
   { label: "7d", days: 7 },
@@ -41,11 +48,14 @@ const PERIODS = [
 ] as const;
 
 const COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
+  "#3b82f6",
+  "#8b5cf6",
+  "#06b6d4",
+  "#f59e0b",
+  "#ef4444",
+  "#10b981",
+  "#ec4899",
+  "#6366f1",
 ];
 
 function Skeleton({ className }: { className?: string }) {
@@ -186,12 +196,15 @@ export default function AnalyticsDetailPage() {
     value: d.clicks,
   }));
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+
   return (
       <div className="space-y-6">
         {loadingLink ? (
-          <div>
+          <div className="space-y-2">
             <Skeleton className="h-8 w-64" />
-            <Skeleton className="mt-1 h-4 w-48" />
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-6 w-36" />
           </div>
         ) : errorLink ? (
           <div className="flex items-center gap-2 text-destructive">
@@ -199,14 +212,25 @@ export default function AnalyticsDetailPage() {
             <span>{errorLink}</span>
           </div>
         ) : link ? (
-          <div>
+          <div className="space-y-3">
             <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-            <p className="mt-1 truncate text-gray-600">
+            <p className="text-gray-600 truncate max-w-2xl">
               {link.originalUrl}
             </p>
-            <p className="text-sm text-gray-500">
-              /{link.shortCode}
-            </p>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 border border-blue-200">
+                {link.shortCode}
+              </span>
+              <Button variant="ghost" size="icon-sm" asChild>
+                <a
+                  href={LinksService.getPublicUrl(link.shortCode)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </Button>
+            </div>
           </div>
         ) : null}
 
@@ -219,27 +243,30 @@ export default function AnalyticsDetailPage() {
             </>
           ) : (
             <>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-gray-900">Total Cliques</CardTitle>
+              <Card className="overflow-hidden border-blue-100 bg-gradient-to-br from-blue-50 to-white">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">Total de Cliques</CardTitle>
+                  <MousePointerClick className="h-4 w-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
                   <p className="text-3xl font-bold text-gray-900">{totalClicks}</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-gray-900">Período</CardTitle>
+              <Card className="overflow-hidden border-purple-100 bg-gradient-to-br from-purple-50 to-white">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">Período</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-purple-500" />
                 </CardHeader>
                 <CardContent>
                   <p className="text-3xl font-bold text-gray-900">{period}d</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-gray-900">Pico</CardTitle>
+              <Card className="overflow-hidden border-cyan-100 bg-gradient-to-br from-cyan-50 to-white">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">Pico</CardTitle>
+                  <Globe className="h-4 w-4 text-cyan-500" />
                 </CardHeader>
                 <CardContent>
                   <p className="text-3xl font-bold text-gray-900">
@@ -266,13 +293,18 @@ export default function AnalyticsDetailPage() {
                 </CardDescription>
               </div>
 
-              <div className="flex gap-1">
+              <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
                 {PERIODS.map((p) => (
                   <Button
                     key={p.days}
-                    variant={period === p.days ? "default" : "outline"}
+                    variant={period === p.days ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setPeriod(p.days)}
+                    className={
+                      period === p.days
+                        ? "shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }
                   >
                     {p.label}
                   </Button>
@@ -295,26 +327,58 @@ export default function AnalyticsDetailPage() {
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={clicksPerDay}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <AreaChart data={clicksPerDay}>
+                  <defs>
+                    <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                   <XAxis
                     dataKey="date"
-                    tickFormatter={(d) => new Date(d).toLocaleDateString()}
-                    className="text-xs text-muted-foreground"
+                    tickFormatter={(d) => {
+                      const date = new Date(d);
+                      return `${date.getDate()}/${date.getMonth() + 1}`;
+                    }}
+                    className="text-xs"
+                    tick={{ fill: "#9ca3af", fontSize: 12 }}
+                    axisLine={{ stroke: "#e5e7eb" }}
+                    tickLine={false}
                   />
-                  <YAxis className="text-xs text-muted-foreground" allowDecimals={false} />
+                  <YAxis
+                    className="text-xs"
+                    tick={{ fill: "#9ca3af", fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
                   <Tooltip
-                    labelFormatter={(d) => new Date(d).toLocaleDateString()}
-                    formatter={(value: number) => [value, "Cliques"]}
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      padding: "8px 12px",
+                    }}
+                    labelFormatter={(d) => new Date(d).toLocaleDateString("pt-BR")}
+                    formatter={(value: number) => [`${value} cliques`, "Total"]}
                   />
-                  <Line
+                  <Area
                     type="monotone"
                     dataKey="clicks"
-                    stroke="hsl(var(--chart-1))"
-                    strokeWidth={2}
+                    stroke="#3b82f6"
+                    strokeWidth={2.5}
+                    fill="url(#colorClicks)"
                     dot={false}
+                    activeDot={{
+                      r: 5,
+                      fill: "#3b82f6",
+                      stroke: "#fff",
+                      strokeWidth: 2,
+                    }}
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             )}
           </CardContent>
@@ -323,10 +387,15 @@ export default function AnalyticsDetailPage() {
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-gray-900">Top Países</CardTitle>
-              <CardDescription>
-                Distribuição de cliques por país
-              </CardDescription>
+              <div className="flex items-center gap-2">
+                <Globe className="h-5 w-5 text-blue-500" />
+                <div>
+                  <CardTitle className="text-gray-900">Top Países</CardTitle>
+                  <CardDescription>
+                    Distribuição de cliques por país
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
 
             <CardContent>
@@ -348,28 +417,54 @@ export default function AnalyticsDetailPage() {
                       .sort((a, b) => b.clicks - a.clicks)
                       .slice(0, 10)}
                     layout="vertical"
+                    margin={{ left: 10 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      className="stroke-border"
+                      stroke="#e5e7eb"
+                      horizontal={false}
                     />
                     <XAxis
                       type="number"
-                      className="text-xs text-muted-foreground"
+                      tick={{ fill: "#9ca3af", fontSize: 12 }}
+                      axisLine={{ stroke: "#e5e7eb" }}
+                      tickLine={false}
                       allowDecimals={false}
                     />
                     <YAxis
                       type="category"
                       dataKey="country"
-                      className="text-xs text-muted-foreground"
+                      tick={{ fill: "#6b7280", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
                       width={100}
                     />
-                    <Tooltip formatter={(value: number) => [value, "Cliques"]} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                        padding: "8px 12px",
+                      }}
+                      formatter={(value: number) => [`${value} cliques`, "Total"]}
+                    />
                     <Bar
                       dataKey="clicks"
-                      fill="hsl(var(--chart-2))"
-                      radius={[0, 4, 4, 0]}
-                    />
+                      radius={[0, 6, 6, 0]}
+                      maxBarSize={28}
+                    >
+                      {countries
+                        .sort((a, b) => b.clicks - a.clicks)
+                        .slice(0, 10)
+                        .map((_, index) => (
+                          <Cell
+                            key={index}
+                            fill={COLORS[index % COLORS.length]}
+                            fillOpacity={0.85}
+                          />
+                        ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -378,10 +473,15 @@ export default function AnalyticsDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-gray-900">Dispositivos</CardTitle>
-              <CardDescription>
-                Mobile vs Desktop
-              </CardDescription>
+              <div className="flex items-center gap-2">
+                <Monitor className="h-5 w-5 text-purple-500" />
+                <div>
+                  <CardTitle className="text-gray-900">Dispositivos</CardTitle>
+                  <CardDescription>
+                    Mobile vs Desktop
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
 
             <CardContent>
@@ -405,20 +505,33 @@ export default function AnalyticsDetailPage() {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      outerRadius={80}
-                      innerRadius={40}
+                      outerRadius={90}
+                      innerRadius={50}
+                      paddingAngle={3}
                       label={({ name, percent }) =>
                         `${name} ${(percent * 100).toFixed(0)}%`
                       }
+                      labelLine={{ stroke: "#9ca3af", strokeWidth: 1 }}
                     >
                       {deviceBreakdown.map((_, index) => (
                         <Cell
                           key={index}
                           fill={COLORS[index % COLORS.length]}
+                          stroke="#fff"
+                          strokeWidth={2}
                         />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                        padding: "8px 12px",
+                      }}
+                      formatter={(value: number) => [`${value} cliques`, "Total"]}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               )}

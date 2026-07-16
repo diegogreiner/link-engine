@@ -107,7 +107,7 @@ export default function AnalyticsPage() {
                 links.map((link) => (
                   <TableRow key={link.shortCode}>
                     <TableCell className="font-medium text-gray-900">
-                      /{link.shortCode}
+                      {link.shortCode}
                     </TableCell>
                     <TableCell className="max-w-[400px] truncate text-gray-700">
                       {link.originalUrl}
