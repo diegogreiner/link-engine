@@ -18,6 +18,7 @@ export class LinksService {
 				shortCode,
 				originalUrl: dto.originalUrl,
 				expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+				ga4MeasurementId: dto.ga4MeasurementId || null,
 			},
 		});
 	}
@@ -30,6 +31,7 @@ export class LinksService {
 			data: {
 				...dto,
 				expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+				ga4MeasurementId: dto.ga4MeasurementId ?? undefined,
 			},
 		});
 	}
@@ -54,6 +56,7 @@ export class LinksService {
 			originalUrl: i.originalUrl,
 			shortCode: i.shortCode,
 			createdAt: i.createdAt,
+			ga4MeasurementId: i.ga4MeasurementId,
 		}));
 	}
 

@@ -26,6 +26,7 @@ import { LinksService } from "@/src/services/link-service";
 
 const schema = z.object({
 	originalUrl: z.string().url("Informe uma URL válida"),
+	ga4MeasurementId: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -44,6 +45,7 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 		resolver: zodResolver(schema),
 		defaultValues: {
 			originalUrl: initialData?.originalUrl ?? "",
+			ga4MeasurementId: initialData?.ga4MeasurementId ?? "",
 		},
 	});
 
@@ -52,10 +54,15 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 			setLoading(true);
 			setError(null);
 
+			const payload = {
+				originalUrl: data.originalUrl,
+				ga4MeasurementId: data.ga4MeasurementId || undefined,
+			};
+
 			if (id) {
-				await LinksService.update(id, { originalUrl: data.originalUrl });
+				await LinksService.update(id, payload);
 			} else {
-				await LinksService.create({ originalUrl: data.originalUrl });
+				await LinksService.create(payload);
 			}
 
 			form.reset();
@@ -93,6 +100,23 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 										<Input placeholder="https://github.com" {...field} />
 									</FormControl>
 
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							control={form.control}
+							name="ga4MeasurementId"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>GA4 Measurement ID (opcional)</FormLabel>
+									<FormControl>
+										<Input placeholder="G-XXXXXXXXXX" {...field} />
+									</FormControl>
+									<p className="text-xs text-muted-foreground">
+										Ex: G-XXXXXXXXXX. Se preenchido, o analytics do Google sera rastreado quando alguem acessar o link.
+									</p>
 									<FormMessage />
 								</FormItem>
 							)}

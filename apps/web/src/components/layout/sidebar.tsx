@@ -17,6 +17,11 @@ const items = [
 		href: "/links",
 		icon: Link2,
 	},
+	{
+		label: "Analytics",
+		href: "/analytics",
+		icon: BarChart3,
+	},
 ];
 
 export function Sidebar() {

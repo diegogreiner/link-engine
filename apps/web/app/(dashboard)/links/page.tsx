@@ -1,6 +1,7 @@
 "use client";
 
-import { Copy } from "lucide-react";
+import { BarChart3, Copy } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -127,9 +128,16 @@ export default function LinksPage() {
 												<Copy className="h-4 w-4" />
 											</Button>
 
+											<Button size="icon" variant="ghost" asChild>
+												<Link href={`/analytics/${link.id}`}>
+													<BarChart3 className="h-4 w-4" />
+												</Link>
+											</Button>
+
 											<EditLinkDialog
 												linkId={link.id}
 												initialUrl={link.originalUrl}
+												initialGa4={link.ga4MeasurementId}
 												onSuccess={loadLinks}
 											/>
 

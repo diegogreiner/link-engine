@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsOptional, IsUrl } from "class-validator";
+import { IsDateString, IsOptional, IsString, IsUrl } from "class-validator";
 
 export class CreateLinkDto {
   @ApiProperty({ example: "https://google.com" })
@@ -10,4 +10,9 @@ export class CreateLinkDto {
   @IsOptional()
   @IsDateString()
   expiresAt?: string;
+
+  @ApiProperty({ example: "G-XXXXXXXXXX", required: false })
+  @IsOptional()
+  @IsString()
+  ga4MeasurementId?: string;
 }

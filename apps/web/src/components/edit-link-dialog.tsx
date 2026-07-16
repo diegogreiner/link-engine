@@ -15,18 +15,19 @@ import {
 interface EditLinkDialogProps {
 	linkId: string;
 	initialUrl: string;
+	initialGa4?: string | null;
 	onSuccess?: () => void;
 }
 
 export function EditLinkDialog({
 	linkId,
 	initialUrl,
+	initialGa4,
 	onSuccess,
 }: EditLinkDialogProps) {
 	const [open, setOpen] = useState(false);
 
 	function handleSuccess() {
-		setOpen(false);
 		onSuccess?.();
 	}
 
@@ -45,7 +46,7 @@ export function EditLinkDialog({
 
 				<LinkForm
 					id={linkId}
-					initialData={{ originalUrl: initialUrl }}
+					initialData={{ originalUrl: initialUrl, ga4MeasurementId: initialGa4 ?? "" }}
 					onSuccess={handleSuccess}
 				/>
 			</DialogContent>

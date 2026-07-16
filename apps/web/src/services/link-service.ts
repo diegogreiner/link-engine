@@ -3,6 +3,7 @@ import { api } from "@/src/lib/api";
 export type LinkDto = {
 	originalUrl: string;
 	expiresAt?: string;
+	ga4MeasurementId?: string;
 };
 
 export type Link = {
@@ -12,6 +13,7 @@ export type Link = {
 	clicks?: number;
 	createdAt?: string;
 	expiresAt?: string | null;
+	ga4MeasurementId?: string | null;
 };
 
 export class LinksService {

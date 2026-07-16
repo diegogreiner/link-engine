@@ -10,7 +10,7 @@ export class RedirectController {
 	async redirect(
 		@Param("shortCode") shortCode: string,
 		@Req() req: Request,
-		@Res({ passthrough: true }) res: Response,
+		@Res() res: Response,
 	) {
 		const link = await this.linksService.findByShortCode(shortCode);
 
@@ -25,6 +25,47 @@ export class RedirectController {
 			referer,
 		});
 
+		if (link.ga4MeasurementId) {
+			res.setHeader("Content-Type", "text/html; charset=utf-8");
+			res.send(this.buildGa4RedirectPage(link.ga4MeasurementId, link.originalUrl));
+			return;
+		}
+
 		return res.redirect(302, link.originalUrl);
+	}
+
+	private buildGa4RedirectPage(measurementId: string, destinationUrl: string): string {
+		const escapedUrl = destinationUrl
+			.replace(/&/g, "&amp;")
+			.replace(/"/g, "&quot;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;");
+
+		const escapedMeasurementId = measurementId
+			.replace(/&/g, "&amp;")
+			.replace(/"/g, "&quot;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;");
+
+		return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="0;url=${escapedUrl}">
+<title>Redirecionando...</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=${escapedMeasurementId}"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${escapedMeasurementId}');
+gtag('event', 'page_view', { 'link_redirect': true });
+</script>
+</head>
+<body>
+<p>Redirecionando para <a href="${escapedUrl}">${escapedUrl}</a>...</p>
+<script>window.location.replace("${escapedUrl}");</script>
+</body>
+</html>`;
 	}
 }

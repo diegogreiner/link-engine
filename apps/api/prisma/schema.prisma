@@ -18,15 +18,16 @@ model User {
 }
 
 model Link {
-  id           String       @id @default(uuid())
-  originalUrl  String
-  shortCode    String       @unique
-  expiresAt    DateTime?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  userId       String
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  linkAccesses LinkAccess[]
+  id                 String       @id @default(uuid())
+  originalUrl        String
+  shortCode          String       @unique
+  expiresAt          DateTime?
+  ga4MeasurementId   String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  userId             String
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkAccesses       LinkAccess[]
 }
 
 model RefreshToken {

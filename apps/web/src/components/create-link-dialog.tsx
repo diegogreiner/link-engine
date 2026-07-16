@@ -24,7 +24,6 @@ export function CreateLinkDialog({
 	const [open, setOpen] = useState(false);
 
 	function handleSuccess() {
-		setOpen(false);
 		onSuccess?.();
 	}
 
