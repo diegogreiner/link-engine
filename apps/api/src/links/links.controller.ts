@@ -7,11 +7,9 @@ import {
 	Patch,
 	Post,
 	Req,
-	Res,
 	UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
-import { Response } from "express";
 import { JwtAuthGuard } from "src/auth/jwt/jwt-auth.guard";
 import { CreateLinkDto } from "./dto/create-link.dto";
 import { UpdateLinkDto } from "./dto/update-link.dto";
@@ -57,9 +55,5 @@ export class LinksController {
 	}
 	
 
-	@Get(":shortCode")
-	async redirect(@Param("shortCode") shortCode: string, @Res() res: Response) {
-		const link = await this.linksService.findByShortCode(shortCode);
-		return res.redirect(302, link.originalUrl);
-	}
+
 }

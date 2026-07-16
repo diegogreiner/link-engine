@@ -2,57 +2,71 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { AuthService } from "./services/auth-service";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-	providers: [
-		CredentialsProvider({
-			name: "credentials",
+function jwtDecode(token: string) {
+  const base64Url = token.split(".")[1];
+  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  return JSON.parse(atob(base64));
+}
 
-			credentials: {
-				email: {},
-				password: {},
-			},
+export const authOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
 
-			async authorize(credentials) {
-				if (!credentials) return null;
+      credentials: {
+        email: {},
+        password: {},
+      },
 
-				const data = await AuthService.login({
-					email: credentials.email as string,
-					password: credentials.password as string,
-				});
+      async authorize(credentials) {
+        if (!credentials) return null;
 
-				if (!data) return null;
+        const data = await AuthService.login({
+          email: credentials.email as string,
+          password: credentials.password as string,
+        });
 
-				return {
-					id: data.user.id,
-					name: data.user.name,
-					email: data.user.email,
-					accessToken: data.accessToken,
-					refreshToken: data.refreshToken,
-				};
-			},
-		}),
-	],
+        if (!data) return null;
 
-	callbacks: {
-		async jwt({ token, user }) {
-			if (user) {
-				token.accessToken = user.accessToken;
-				token.refreshToken = user.refreshToken;
-				token.user = user;
-			}
+        const payload = jwtDecode(data.accessToken);
 
-			return token;
-		},
+        return {
+          id: payload.sub,
+          email: payload.email,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+        };
+      },
+    }),
+  ],
 
-		async session({ session, token }) {
-			session.accessToken = token.accessToken;
-			session.refreshToken = token.refreshToken;
+  callbacks: {
+    async jwt({ token, user }: { token: any; user?: any }) {
+      if (user) {
+        token.accessToken = user.accessToken;
+        token.refreshToken = user.refreshToken;
+        token.id = user.id;
+        token.email = user.email;
+      }
 
-			return session;
-		},
-	},
+      return token;
+    },
 
-	session: {
-		strategy: "jwt",
-	},
-});
+    async session({ session, token }: { session: any; token: any }) {
+      session.accessToken = token.accessToken;
+      session.refreshToken = token.refreshToken;
+      session.user.id = token.id;
+      session.user.email = token.email;
+
+      return session;
+    },
+  },
+
+  session: {
+    strategy: "jwt" as const,
+  },
+};
+
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };

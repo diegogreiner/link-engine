@@ -5,38 +5,38 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
+  --background: oklch(0.93 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.546 0.245 262.881);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --secondary: oklch(0.95 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.94 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: oklch(0.546 0.245 262.881);
+  --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: oklch(0.82 0 0);
+  --input: oklch(0.82 0 0);
+  --ring: oklch(0.546 0.245 262.881);
+  --chart-1: oklch(0.546 0.245 262.881);
+  --chart-2: oklch(0.707 0.165 254.624);
+  --chart-3: oklch(0.606 0.195 256.8);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.379 0.146 265.522);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.45 0.20 262.881);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.98 0 0);
+  --sidebar-primary-foreground: oklch(0.45 0.20 262.881);
+  --sidebar-accent: oklch(0.55 0.18 262.881);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.50 0.15 262.881);
+  --sidebar-ring: oklch(0.6 0.25 262.881);
 }
 
 @theme inline {
@@ -85,8 +85,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: oklch(0.20 0.015 262);
+    --foreground: oklch(0.96 0 0);
   }
 }
 
@@ -97,37 +97,37 @@ body {
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
+  --background: oklch(0.20 0.015 262);
+  --foreground: oklch(0.96 0 0);
+  --card: oklch(0.24 0.018 262);
+  --card-foreground: oklch(0.96 0 0);
+  --popover: oklch(0.24 0.018 262);
+  --popover-foreground: oklch(0.96 0 0);
+  --primary: oklch(0.707 0.165 254.624);
   --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.28 0.018 262);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted: oklch(0.28 0.018 262);
+  --muted-foreground: oklch(0.72 0 0);
+  --accent: oklch(0.707 0.165 254.624);
+  --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: oklch(0.32 0.02 262);
+  --input: oklch(0.32 0.02 262);
+  --ring: oklch(0.707 0.165 254.624);
+  --chart-1: oklch(0.707 0.165 254.624);
+  --chart-2: oklch(0.606 0.195 256.8);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.379 0.146 265.522);
+  --sidebar: oklch(0.45 0.20 262.881);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.98 0 0);
+  --sidebar-primary-foreground: oklch(0.45 0.20 262.881);
+  --sidebar-accent: oklch(0.55 0.18 262.881);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.50 0.15 262.881);
+  --sidebar-ring: oklch(0.6 0.25 262.881);
 }
 
 @layer base {
@@ -140,4 +140,78 @@ body {
   html {
     @apply font-sans;
   }
+  button, [role="button"], a[role="button"] {
+    @apply cursor-pointer;
+  }
+}
+
+main {
+  color: #1a1a1a;
+}
+
+main h1, main h2, main h3 {
+  color: #111111;
+}
+
+main p, main span, main td, main th, main label {
+  color: #333333;
+}
+
+main .text-muted-foreground {
+  color: #666666 !important;
+}
+
+main .text-foreground {
+  color: #1a1a1a !important;
+}
+
+main .text-card-foreground {
+  color: #1a1a1a !important;
+}
+
+[data-slot="button"][data-variant="default"] {
+  color: #fff !important;
+}
+
+[data-slot="button"][data-variant="outline"] {
+  background-color: #1e3a8a !important;
+  border-color: #1e3a8a !important;
+  color: #fff !important;
+}
+
+[data-slot="button"][data-variant="outline"]:hover {
+  background-color: #172554 !important;
+  border-color: #172554 !important;
+  color: #fff !important;
+}
+
+[data-slot="button"][data-variant="ghost"] {
+  background-color: transparent !important;
+  color: #6b7280 !important;
+}
+
+[data-slot="button"][data-variant="ghost"]:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+main table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+main [data-slot="table-row"] {
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+main [data-slot="table-head"] {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  color: #374151 !important;
+}
+
+main [data-slot="table-cell"] {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  color: #1f2937 !important;
 }

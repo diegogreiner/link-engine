@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 
 import "next-auth";
 
@@ -21,3 +21,13 @@ api.interceptors.request.use(async (config) => {
 
 	return config;
 });
+
+api.interceptors.response.use(
+	(response) => response,
+	(error) => {
+		if (error.response?.status === 401) {
+			signOut({ callbackUrl: "/login" });
+		}
+		return Promise.reject(error);
+	},
+);

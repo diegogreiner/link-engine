@@ -1,17 +1,11 @@
 "use client";
 
-import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { DashboardLayout } from "@/src/components/layout";
+
 import { Button } from "@/src/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/src/components/ui/dialog";
+import { CreateLinkDialog } from "@/src/components/create-link-dialog";
 import {
 	Table,
 	TableBody,
@@ -21,12 +15,10 @@ import {
 	TableRow,
 } from "@/src/components/ui/table";
 import { LinksService, Link as LinkType } from "@/src/services/link-service";
-import { LinkForm } from "./[id]/page";
 
 export default function LinksPage() {
 	const [links, setLinks] = useState<LinkType[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [open, setOpen] = useState(false);
 
 	async function loadLinks() {
 		setLoading(true);
@@ -54,93 +46,72 @@ export default function LinksPage() {
 	}
 
 	return (
-		<DashboardLayout>
 			<div className="space-y-6">
 				<div className="flex items-center justify-between">
-					<div>
-						<h1 className="text-3xl font-bold">Links</h1>
+				<div>
+					<h1 className="text-3xl font-bold text-gray-900">Links</h1>
 
-						<p className="text-muted-foreground">
-							Gerencie seus links encurtados.
-						</p>
-					</div>
-
-					<Dialog open={open} onOpenChange={setOpen}>
-						<DialogTrigger asChild>
-							<Button>
-								<Plus className="mr-2 h-4 w-4" />
-								Novo Link
-							</Button>
-						</DialogTrigger>
-
-						<DialogContent>
-							<DialogHeader>
-								<DialogTitle>Novo Link</DialogTitle>
-							</DialogHeader>
-
-							<LinkForm
-								onSuccess={() => {
-									setOpen(false);
-									loadLinks();
-								}}
-							/>
-						</DialogContent>
-					</Dialog>
+					<p className="text-gray-600">
+						Gerencie seus links encurtados.
+					</p>
 				</div>
 
-				<div className="rounded-md border">
+					<CreateLinkDialog onSuccess={loadLinks} />
+				</div>
+
+				<div className="rounded-lg border border-gray-300 bg-white shadow-md overflow-hidden">
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead>Short URL</TableHead>
+								<TableHead className="text-gray-700 font-semibold">Short URL</TableHead>
 
-								<TableHead>URL Original</TableHead>
+								<TableHead className="text-gray-700 font-semibold">URL Original</TableHead>
 
-								<TableHead>Cliques</TableHead>
+								<TableHead className="text-gray-700 font-semibold">Cliques</TableHead>
 
-								<TableHead>Criado em</TableHead>
+								<TableHead className="text-gray-700 font-semibold">Criado em</TableHead>
 
-								<TableHead className="text-right">Ações</TableHead>
+								<TableHead className="text-gray-700 font-semibold">Ações</TableHead>
 							</TableRow>
 						</TableHeader>
 
 						<TableBody>
 							{loading ? (
-								<TableRow>
+								<TableRow key="loading">
 									<TableCell colSpan={5} className="text-center py-10">
 										Carregando...
 									</TableCell>
 								</TableRow>
 							) : links.length === 0 ? (
-								<TableRow>
-									<TableCell
-										colSpan={5}
-										className="text-center py-10 text-muted-foreground"
-									>
+								<TableRow key="empty">
+							<TableCell
+									colSpan={5}
+									className="text-center py-10 text-gray-500"
+								>
 										Nenhum link encontrado
 									</TableCell>
 								</TableRow>
 							) : (
-								links.map((link) => (
-									<TableRow key={link.id}>
-										<TableCell className="font-medium">
-											/{link.shortCode}
-										</TableCell>
+						links.map((link) => (
+								<TableRow key={link.id}>
+									<TableCell className="font-medium text-gray-900">
+										/{link.shortCode}
+									</TableCell>
 
-										<TableCell className="max-w-[400px] truncate">
-											{link.originalUrl}
-										</TableCell>
+									<TableCell className="max-w-[400px] truncate text-gray-700">
+										{link.originalUrl}
+									</TableCell>
 
-										<TableCell>{link.clicks ?? 0}</TableCell>
+									<TableCell className="text-gray-700">{link.clicks ?? 0}</TableCell>
 
-										<TableCell>
+									<TableCell className="text-gray-700">
 											{link.createdAt
 												? new Date(link.createdAt).toLocaleDateString()
 												: "-"}
 										</TableCell>
 
 										<TableCell>
-											<div className="flex justify-end gap-2">
+											<div className="flex gap-2">
 												<Button
 													size="icon"
 													variant="ghost"
@@ -171,6 +142,5 @@ export default function LinksPage() {
 					</Table>
 				</div>
 			</div>
-		</DashboardLayout>
 	);
 }

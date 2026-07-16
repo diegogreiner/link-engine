@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Loader2 } from "lucide-react";
 import { AuthService } from "@/src/services/auth-service";
 import { Button } from "../ui/button";
 import {
@@ -30,14 +31,21 @@ interface AuthFormProps {
 }
 
 const schema = z.object({
-	email: z.email(),
-	password: z.string().min(6),
+	email: z
+		.string()
+		.min(1, "E-mail é obrigatório")
+		.email("E-mail inválido"),
+	password: z
+		.string()
+		.min(6, "Senha deve ter no mínimo 6 caracteres"),
 });
 
 export function AuthForm({ mode }: AuthFormProps) {
 	const router = useRouter();
 
 	const [error, setError] = useState("");
+	const [success, setSuccess] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
 
 	type FormData = z.infer<typeof schema>;
 
@@ -51,12 +59,19 @@ export function AuthForm({ mode }: AuthFormProps) {
 
 	async function onSubmit(values: FormData) {
 		setError("");
+		setSuccess("");
+		setIsLoading(true);
 
 		try {
 			if (mode === "register") {
-				AuthService.register(values);
+				await AuthService.register(values);
 
-				router.push("/login");
+				setSuccess("Conta criada com sucesso! Redirecionando...");
+
+				setTimeout(() => {
+					router.push("/login");
+				}, 1500);
+
 				return;
 			}
 
@@ -67,25 +82,29 @@ export function AuthForm({ mode }: AuthFormProps) {
 			});
 
 			if (result?.error) {
-				setError("Credenciais inválidas");
+				setError("E-mail ou senha inválidos");
 				return;
 			}
 
-			router.push("/dashboard");
+			router.push("/");
 		} catch {
-			setError("Ocorreu um erro");
+			setError("Ocorreu um erro. Tente novamente.");
+		} finally {
+			setIsLoading(false);
 		}
 	}
 
+	const isSubmitting = form.formState.isSubmitting || isLoading;
+
 	return (
-		<Card className="w-full max-w-md">
+		<Card className="w-full max-w-md border-0 bg-gray-50 shadow-lg lg:bg-white">
 			<CardHeader>
 				<CardTitle>{mode === "login" ? "Entrar" : "Criar Conta"}</CardTitle>
 
 				<CardDescription>
 					{mode === "login"
-						? "Informe suas credenciais"
-						: "Preencha seus dados"}
+						? "Informe suas credenciais para acessar"
+						: "Preencha seus dados para criar sua conta"}
 				</CardDescription>
 			</CardHeader>
 
@@ -103,6 +122,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 										<Input
 											type="email"
 											placeholder="email@empresa.com"
+											disabled={isSubmitting}
 											{...field}
 										/>
 									</FormControl>
@@ -120,7 +140,12 @@ export function AuthForm({ mode }: AuthFormProps) {
 									<FormLabel>Senha</FormLabel>
 
 									<FormControl>
-										<Input type="password" placeholder="********" {...field} />
+										<Input
+											type="password"
+											placeholder="********"
+											disabled={isSubmitting}
+											{...field}
+										/>
 									</FormControl>
 
 									<FormMessage />
@@ -129,12 +154,46 @@ export function AuthForm({ mode }: AuthFormProps) {
 						/>
 
 						{error && <p className="text-sm text-destructive">{error}</p>}
+						{success && <p className="text-sm text-green-600">{success}</p>}
 
-						<Button type="submit" className="w-full">
-							{mode === "login" ? "Entrar" : "Cadastrar"}
+						<Button type="submit" className="w-full" disabled={isSubmitting}>
+							{isSubmitting ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									{mode === "login" ? "Entrando..." : "Cadastrando..."}
+								</>
+							) : mode === "login" ? (
+								"Entrar"
+							) : (
+								"Cadastrar"
+							)}
 						</Button>
 					</form>
 				</Form>
+
+				<div className="mt-4 text-center text-sm text-muted-foreground">
+					{mode === "login" ? (
+						<>
+							Não tem uma conta?{" "}
+							<a
+								href="/register"
+								className="font-medium text-primary hover:underline"
+							>
+								Criar conta
+							</a>
+						</>
+					) : (
+						<>
+							Já tem uma conta?{" "}
+							<a
+								href="/login"
+								className="font-medium text-primary hover:underline"
+							>
+								Fazer login
+							</a>
+						</>
+					)}
+				</div>
 			</CardContent>
 		</Card>
 	);

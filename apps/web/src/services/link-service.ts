@@ -2,7 +2,6 @@ import { api } from "@/src/lib/api";
 
 export type LinkDto = {
 	originalUrl: string;
-	shortCode?: string;
 	expiresAt?: string;
 };
 

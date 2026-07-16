@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Link2, LogOut, Plus } from "lucide-react";
+import { BarChart3, Link2, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,7 +9,7 @@ import { signOut } from "next-auth/react";
 const items = [
 	{
 		label: "Dashboard",
-		href: "/dashboard",
+		href: "/",
 		icon: BarChart3,
 	},
 	{
@@ -23,14 +23,12 @@ export function Sidebar() {
 	const pathname = usePathname();
 
 	return (
-		<aside className="w-64 border-r bg-background">
-			<div className="border-b p-6">
-				<h1 className="text-xl font-bold">Link Engine</h1>
-
-				<p className="text-sm text-muted-foreground">URL Shortener</p>
+		<aside className="w-64 bg-blue-900 text-white flex flex-col">
+			<div className="border-b border-white/10 h-16 p-4 py-0 flex items-center">
+				<h1 className="text-xl font-bold text-white">Link Engine</h1>
 			</div>
 
-			<nav className="p-4 space-y-2">
+			<nav className="flex-1 p-4 space-y-2">
 				{items.map((item) => {
 					const Icon = item.icon;
 
@@ -40,11 +38,11 @@ export function Sidebar() {
 						<Link
 							key={item.href}
 							href={item.href}
-							className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition
+							className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium
 								${
 									active
-										? "bg-primary text-primary-foreground"
-										: "hover:bg-muted"
+										? "bg-white/20 text-white shadow-sm"
+										: "text-white/70 hover:bg-white/10 hover:text-white"
 								}`}
 						>
 							<Icon size={18} />
@@ -55,11 +53,11 @@ export function Sidebar() {
 				})}
 			</nav>
 
-			<div className="mt-auto p-4">
+			<div className="border-t border-white/10 p-4">
 				<button
 					type="button"
 					onClick={() => signOut()}
-					className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-muted"
+					className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white"
 				>
 					<LogOut size={18} />
 					Sair

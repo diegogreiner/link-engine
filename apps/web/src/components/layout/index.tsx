@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
 import { ReactNode } from "react";
-import { auth } from "@/src/auth";
+import { authOptions } from "@/src/auth";
 import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 
@@ -9,14 +10,14 @@ interface DashboardLayoutProps {
 }
 
 export async function DashboardLayout({ children }: DashboardLayoutProps) {
-	const session = await auth();
+	const session = await getServerSession(authOptions);
 
 	if (!session) {
 		redirect("/login");
 	}
-	
+
 	return (
-		<div className="flex h-screen overflow-hidden">
+		<div className="flex h-screen overflow-hidden bg-gray-200">
 			<Sidebar />
 
 			<div className="flex flex-1 flex-col">

@@ -50,8 +50,10 @@ export class LinksService {
 		});
 
 		return links.map((i) => ({
+			id: i.id,
 			originalUrl: i.originalUrl,
 			shortCode: i.shortCode,
+			createdAt: i.createdAt,
 		}));
 	}
 

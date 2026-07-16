@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { DashboardLayout } from "@/src/components/layout";
+
 import { Button } from "@/src/components/ui/button";
 import {
 	Card,
@@ -26,11 +26,6 @@ import { LinksService } from "@/src/services/link-service";
 
 const schema = z.object({
 	originalUrl: z.string().url("Informe uma URL válida"),
-	shortCode: z
-		.string()
-		.min(3, "Mínimo de 3 caracteres")
-		.max(50, "Máximo de 50 caracteres")
-		.regex(/^[a-zA-Z0-9-_]+$/, "Apenas letras, números, hífen e underline"),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -49,7 +44,6 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 		resolver: zodResolver(schema),
 		defaultValues: {
 			originalUrl: initialData?.originalUrl ?? "",
-			shortCode: initialData?.shortCode ?? "",
 		},
 	});
 
@@ -59,9 +53,9 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 			setError(null);
 
 			if (id) {
-				await LinksService.update(id, data);
+				await LinksService.update(id, { originalUrl: data.originalUrl });
 			} else {
-				await LinksService.create(data);
+				await LinksService.create({ originalUrl: data.originalUrl });
 			}
 
 			form.reset();
@@ -75,9 +69,8 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 	}
 
 	return (
-		<Card>
+		<>
 			<CardHeader>
-				<CardTitle>{id ? "Editar Link" : "Novo Link"}</CardTitle>
 
 				<CardDescription>
 					{id
@@ -105,22 +98,6 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 							)}
 						/>
 
-						<FormField
-							control={form.control}
-							name="shortCode"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Short Code</FormLabel>
-
-									<FormControl>
-										<Input placeholder="github" {...field} />
-									</FormControl>
-
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
 						{error && <p className="text-sm text-red-500">{error}</p>}
 
 						<div className="flex justify-end">
@@ -135,7 +112,7 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 					</form>
 				</Form>
 			</CardContent>
-		</Card>
+		</>
 	);
 }
 
@@ -149,16 +126,14 @@ export default function LinkDetailsPage({ params }: LinkDetailsPageProps) {
 	const { id } = params;
 
 	return (
-		<DashboardLayout>
 			<div className="max-w-3xl space-y-6">
-				<div>
-					<h1 className="text-3xl font-bold">Editar Link</h1>
+			<div>
+				<h1 className="text-3xl font-bold text-gray-900">Editar Link</h1>
 
-					<p className="text-muted-foreground">ID: {id}</p>
-				</div>
+				<p className="text-gray-600">ID: {id}</p>
+			</div>
 
 				<LinkForm id={id} />
 			</div>
-		</DashboardLayout>
 	);
 }
