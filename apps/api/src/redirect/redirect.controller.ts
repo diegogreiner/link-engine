@@ -10,7 +10,7 @@ export class RedirectController {
 	async redirect(
 		@Param("shortCode") shortCode: string,
 		@Req() req: Request,
-		@Res() res: Response,
+		@Res({ passthrough: true }) res: Response,
 	) {
 		const link = await this.linksService.findByShortCode(shortCode);
 
@@ -24,7 +24,7 @@ export class RedirectController {
 			userAgent,
 			referer,
 		});
-		
+
 		return res.redirect(302, link.originalUrl);
 	}
 }

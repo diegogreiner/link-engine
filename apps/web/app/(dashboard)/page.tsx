@@ -186,7 +186,7 @@ export default function DashboardPage() {
                 </TableRow>
               ) : (
                 links.slice(0, 5).map((link) => (
-                  <TableRow key={link.id}>
+                  <TableRow key={link.shortCode}>
                     <TableCell className="font-medium text-gray-900">
                       /{link.shortCode}
                     </TableCell>

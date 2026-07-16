@@ -80,12 +80,12 @@ export class LinksService {
 			},
 		});
 
-		if (link.expiresAt && link.expiresAt < new Date()) {
-			throw new GoneException("Link expirado");
-		}
-
 		if (!link) {
 			throw new NotFoundException("Link não encontrado");
+		}
+
+		if (link.expiresAt && link.expiresAt < new Date()) {
+			throw new GoneException("Link expirado");
 		}
 
 		return link;
