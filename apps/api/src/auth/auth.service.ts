@@ -72,7 +72,7 @@ export class AuthService {
 	async logout(userId: string) {
 		await this.prisma.refreshToken.deleteMany({
 			where: {
-				id: userId,
+				userId,
 			},
 		});
 
@@ -104,6 +104,12 @@ export class AuthService {
 			if (!validToken) {
 				throw new UnauthorizedException();
 			}
+
+			await this.prisma.refreshToken.delete({
+				where: {
+					id: validToken.id,
+				},
+			});
 
 			return this.generateTokens(payload.sub, payload.email);
 		} catch {

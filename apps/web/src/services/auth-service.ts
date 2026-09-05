@@ -1,7 +1,11 @@
 import { api } from "../lib/api";
+import { LoginResponse } from "../types/auth";
 
 export class AuthService {
-	static async login(data: { email: string; password: string }) {
+	static async login(data: {
+		email: string;
+		password: string;
+	}): Promise<LoginResponse> {
 		const response = await api.post("/auth/login", data);
 
 		return response.data;
@@ -13,11 +17,15 @@ export class AuthService {
 		return response.data;
 	}
 
-	static async refresh(refreshToken: string) {
+	static async refresh(refreshToken: string): Promise<LoginResponse> {
 		const response = await api.post("/auth/refresh", {
 			refreshToken,
 		});
 
 		return response.data;
+	}
+
+	static async logout(): Promise<void> {
+		await api.post("/auth/logout");
 	}
 }

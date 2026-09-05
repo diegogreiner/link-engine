@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { signOut } from "next-auth/react";
+import { AuthService } from "@/src/services/auth-service";
 
 const items = [
 	{
@@ -26,6 +27,14 @@ const items = [
 
 export function Sidebar() {
 	const pathname = usePathname();
+
+	async function handleLogout() {
+		try {
+			await AuthService.logout();
+		} finally {
+			await signOut({ callbackUrl: "/login" });
+		}
+	}
 
 	return (
 		<aside className="w-64 bg-blue-900 text-white flex flex-col">
@@ -61,7 +70,7 @@ export function Sidebar() {
 			<div className="border-t border-white/10 p-4">
 				<button
 					type="button"
-					onClick={() => signOut()}
+					onClick={handleLogout}
 					className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white"
 				>
 					<LogOut size={18} />

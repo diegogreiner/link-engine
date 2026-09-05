@@ -23,10 +23,11 @@ export class LinksService {
 		});
 	}
 
-	async update(id: string, dto: UpdateLinkDto) {
-		return this.prisma.link.update({
+	async update(id: string, dto: UpdateLinkDto, userId: string) {
+		const result = await this.prisma.link.updateMany({
 			where: {
 				id,
+				userId,
 			},
 			data: {
 				...dto,
@@ -34,18 +35,41 @@ export class LinksService {
 				ga4MeasurementId: dto.ga4MeasurementId ?? undefined,
 			},
 		});
+
+		if (result.count === 0) {
+			throw new NotFoundException("Link não encontrado");
+		}
+
+		return this.findOne(id, userId);
 	}
 
-	async remove(id: string) {
-		return this.prisma.link.delete({
+	async remove(id: string, userId: string) {
+		const result = await this.prisma.link.deleteMany({
 			where: {
 				id,
+				userId,
 			},
 		});
+
+		if (result.count === 0) {
+			throw new NotFoundException("Link não encontrado");
+		}
+
+		return { message: "Link excluído com sucesso" };
 	}
 
-	async findAll() {
+	async findAll(userId: string) {
 		const links = await this.prisma.link.findMany({
+			where: {
+				userId,
+			},
+			include: {
+				_count: {
+					select: {
+						linkAccesses: true,
+					},
+				},
+			},
 			orderBy: {
 				createdAt: "desc",
 			},
@@ -56,24 +80,37 @@ export class LinksService {
 			originalUrl: i.originalUrl,
 			shortCode: i.shortCode,
 			createdAt: i.createdAt,
+			expiresAt: i.expiresAt,
 			ga4MeasurementId: i.ga4MeasurementId,
+			clicks: i._count.linkAccesses,
 		}));
 	}
 
-	async findOne(id: string) {
-		try {
-			const link = await this.prisma.link.findUnique({
-				where: {
-					id,
+	async findOne(id: string, userId: string) {
+		const link = await this.prisma.link.findFirst({
+			where: {
+				id,
+				userId,
+			},
+			include: {
+				_count: {
+					select: {
+						linkAccesses: true,
+					},
 				},
-			});
+			},
+		});
 
-			const { userId } = link;
-
-			return link;
-		} catch (error) {
+		if (!link) {
 			throw new NotFoundException("Nenhum link encontrado");
 		}
+
+		const { _count, ...linkData } = link;
+
+		return {
+			...linkData,
+			clicks: _count.linkAccesses,
+		};
 	}
 
 	async findByShortCode(shortCode: string) {

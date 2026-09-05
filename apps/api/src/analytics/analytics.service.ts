@@ -72,7 +72,7 @@ export class AnalyticsService {
 
 		const where = {
 			linkId,
-			clickedAt: {
+			createdAt: {
 				...(filter.from && {
 					gte: new Date(filter.from),
 				}),
