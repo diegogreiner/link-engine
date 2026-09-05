@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { PrismaService } from "src/prisma/service";
 import { AnalyticsFilterDto } from "./dto/analytics.dto";
+
+const PRODUCT_TIME_ZONE = "America/Sao_Paulo";
 
 @Injectable()
 export class AnalyticsService {
@@ -53,13 +56,13 @@ export class AnalyticsService {
 				linkId,
 			},
 			_count: {
-				referer: true,
+				_all: true,
 			},
 		});
 
 		return result.map((item) => ({
 			referer: item.referer ?? "Direct",
-			clicks: item._count.referer,
+			clicks: item._count._all,
 		}));
 	}
 
@@ -70,14 +73,24 @@ export class AnalyticsService {
 	) {
 		await this.validateOwnership(linkId, userId);
 
+		const from = filter.from
+			? fromZonedTime(`${filter.from}T00:00:00`, PRODUCT_TIME_ZONE)
+			: undefined;
+		const toExclusive = filter.to
+			? fromZonedTime(
+					`${this.addDaysToDateString(filter.to, 1)}T00:00:00`,
+					PRODUCT_TIME_ZONE,
+				)
+			: undefined;
+
 		const where = {
 			linkId,
 			createdAt: {
-				...(filter.from && {
-					gte: new Date(filter.from),
+				...(from && {
+					gte: from,
 				}),
-				...(filter.to && {
-					lte: new Date(filter.to),
+				...(toExclusive && {
+					lt: toExclusive,
 				}),
 			},
 		};
@@ -94,7 +107,11 @@ export class AnalyticsService {
 
 		const grouped = clicks.reduce(
 			(acc, click) => {
-				const date = click.createdAt.toISOString().split("T")[0];
+				const date = formatInTimeZone(
+					click.createdAt,
+					PRODUCT_TIME_ZONE,
+					"yyyy-MM-dd",
+				);
 
 				acc[date] = (acc[date] || 0) + 1;
 
@@ -107,6 +124,68 @@ export class AnalyticsService {
 			date,
 			clicks,
 		}));
+	}
+
+	async findSummary(userId: string) {
+		const today = formatInTimeZone(new Date(), PRODUCT_TIME_ZONE, "yyyy-MM-dd");
+		const startOfToday = fromZonedTime(`${today}T00:00:00`, PRODUCT_TIME_ZONE);
+		const startOfTomorrow = fromZonedTime(
+			`${this.addDaysToDateString(today, 1)}T00:00:00`,
+			PRODUCT_TIME_ZONE,
+		);
+
+		const [totalClicks, totalClicksToday, mostAccessedLink] = await Promise.all(
+			[
+				this.prisma.linkAccess.count({
+					where: {
+						link: { userId },
+					},
+				}),
+				this.prisma.linkAccess.count({
+					where: {
+						link: { userId },
+						createdAt: {
+							gte: startOfToday,
+							lt: startOfTomorrow,
+						},
+					},
+				}),
+				this.prisma.link.findFirst({
+					where: { userId },
+					select: {
+						id: true,
+						shortCode: true,
+						originalUrl: true,
+						_count: {
+							select: { linkAccesses: true },
+						},
+					},
+					orderBy: {
+						linkAccesses: { _count: "desc" },
+					},
+				}),
+			],
+		);
+
+		return {
+			totalClicks,
+			totalClicksToday,
+			mostAccessedLink: mostAccessedLink
+				? {
+						id: mostAccessedLink.id,
+						shortCode: mostAccessedLink.shortCode,
+						originalUrl: mostAccessedLink.originalUrl,
+						totalClicks: mostAccessedLink._count.linkAccesses,
+					}
+				: null,
+		};
+	}
+
+	private addDaysToDateString(dateString: string, days: number): string {
+		const [year, month, day] = dateString.split("-").map(Number);
+		const date = new Date(Date.UTC(year, month - 1, day + days));
+
+		return date.toISOString().slice(0, 10);
 	}
 
 	private async validateOwnership(
