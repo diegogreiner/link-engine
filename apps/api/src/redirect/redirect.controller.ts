@@ -1,10 +1,16 @@
+import { InjectQueue } from "@nestjs/bullmq";
 import { Controller, Get, Param, Req, Res } from "@nestjs/common";
+import { Queue } from "bullmq";
 import { Request, Response } from "express";
 import { LinksService } from "src/links/links.service";
+import { CLICK_QUEUE, PROCESS_CLICK_JOB } from "src/queue/queue.constants";
 
 @Controller()
 export class RedirectController {
-	constructor(private readonly linksService: LinksService) {}
+	constructor(
+		private readonly linksService: LinksService,
+		@InjectQueue(CLICK_QUEUE) private queue: Queue,
+	) {}
 
 	@Get(":shortCode")
 	async redirect(
@@ -19,7 +25,8 @@ export class RedirectController {
 		const userAgent = req.headers["user-agent"] || "";
 		const referer = req.headers["referer"] || "";
 
-		void this.linksService.registerAccess(link.id, {
+		await this.queue.add(PROCESS_CLICK_JOB, {
+			linkId: link.id,
 			ip,
 			userAgent,
 			referer,
@@ -27,14 +34,19 @@ export class RedirectController {
 
 		if (link.ga4MeasurementId) {
 			res.setHeader("Content-Type", "text/html; charset=utf-8");
-			res.send(this.buildGa4RedirectPage(link.ga4MeasurementId, link.originalUrl));
+			res.send(
+				this.buildGa4RedirectPage(link.ga4MeasurementId, link.originalUrl),
+			);
 			return;
 		}
 
 		return res.redirect(302, link.originalUrl);
 	}
 
-	private buildGa4RedirectPage(measurementId: string, destinationUrl: string): string {
+	private buildGa4RedirectPage(
+		measurementId: string,
+		destinationUrl: string,
+	): string {
 		const escapedUrl = destinationUrl
 			.replace(/&/g, "&amp;")
 			.replace(/"/g, "&quot;")
