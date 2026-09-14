@@ -4,6 +4,7 @@ import { LinksService } from "src/links/links.service";
 import { CLICK_QUEUE } from "./queue.constants";
 
 interface JobData {
+	eventId: string;
 	linkId: string;
 	ip: string;
 	userAgent: string;

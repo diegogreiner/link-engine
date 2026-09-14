@@ -25,9 +25,12 @@ export class RedirectController {
 		const userAgent = req.headers["user-agent"] || "";
 		const referer = req.headers["referer"] || "";
 
+		const eventId = crypto.randomUUID();
+
 		await this.queue.add(
 			PROCESS_CLICK_JOB,
 			{
+				eventId,
 				linkId: link.id,
 				ip,
 				userAgent,
