@@ -25,12 +25,22 @@ export class RedirectController {
 		const userAgent = req.headers["user-agent"] || "";
 		const referer = req.headers["referer"] || "";
 
-		await this.queue.add(PROCESS_CLICK_JOB, {
-			linkId: link.id,
-			ip,
-			userAgent,
-			referer,
-		});
+		await this.queue.add(
+			PROCESS_CLICK_JOB,
+			{
+				linkId: link.id,
+				ip,
+				userAgent,
+				referer,
+			},
+			{
+				attempts: 4,
+				backoff: {
+					type: "exponential",
+					delay: 1000,
+				},
+			},
+		);
 
 		if (link.ga4MeasurementId) {
 			res.setHeader("Content-Type", "text/html; charset=utf-8");
