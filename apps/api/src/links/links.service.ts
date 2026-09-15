@@ -1,4 +1,5 @@
 import { GoneException, Injectable, NotFoundException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { nanoid } from "nanoid";
 import { PrismaService } from "src/prisma/service";
 import { UAParser } from "ua-parser-js";
@@ -133,7 +134,7 @@ export class LinksService {
 
 	async registerAccess(
 		linkId: string,
-		data: { ip: string; userAgent: string; referer: string },
+		data: { ip: string; userAgent: string; referer: string; eventId: string },
 	) {
 		try {
 			const parser = new UAParser(data?.userAgent);
@@ -149,6 +150,9 @@ export class LinksService {
 				try {
 					const response = await fetch(
 						`http://ip-api.com/json/${data.ip}?fields=status,country,city`,
+						{
+							signal: AbortSignal.timeout(3000),
+						},
 					);
 
 					const geo = await response.json();
@@ -157,7 +161,9 @@ export class LinksService {
 						country = geo.country;
 						city = geo.city;
 					}
-				} catch {}
+				} catch (error) {
+					console.error(error);
+				}
 			}
 
 			await this.prisma.linkAccess.create({
@@ -166,6 +172,7 @@ export class LinksService {
 					country,
 					city,
 					ip: data.ip,
+					eventId: data.eventId,
 					referer: data.referer,
 					browser: browser.name,
 					browserVersion: browser.version,
@@ -175,7 +182,15 @@ export class LinksService {
 				},
 			});
 		} catch (error) {
-			console.error("Erro ao registrar analytics", error);
+			if (
+				error instanceof Prisma.PrismaClientKnownRequestError &&
+				error.code === "P2002"
+			) {
+				console.log(`Evento ${data.eventId} já processado`);
+				return;
+			}
+
+			throw error;
 		}
 	}
 
