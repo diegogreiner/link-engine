@@ -27,7 +27,7 @@ export class RedirectController {
 
 		const eventId = crypto.randomUUID();
 
-		await this.queue.add(
+		const job = await this.queue.add(
 			PROCESS_CLICK_JOB,
 			{
 				eventId,

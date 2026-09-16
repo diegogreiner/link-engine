@@ -20,6 +20,9 @@
 		"test:e2e": "jest --config ./test/jest-e2e.json"
 	},
 	"dependencies": {
+		"@bull-board/api": "^9.10.1",
+		"@bull-board/express": "^9.10.1",
+		"@bull-board/nestjs": "^9.10.1",
 		"@nestjs/bullmq": "^12.0.0",
 		"@nestjs/common": "^10.0.0",
 		"@nestjs/config": "^4.0.4",
@@ -35,6 +38,7 @@
 		"class-validator": "^0.15.1",
 		"date-fns-tz": "^3.2.0",
 		"dotenv": "^17.4.2",
+		"express-basic-auth": "^1.2.1",
 		"ioredis": "^6.0.0",
 		"nanoid": "^5.1.11",
 		"passport": "^0.7.0",

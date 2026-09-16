@@ -33,6 +33,15 @@ importers:
 
   apps/api:
     dependencies:
+      '@bull-board/api':
+        specifier: ^9.10.1
+        version: 9.10.1(@bull-board/ui@9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2))(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2)
+      '@bull-board/express':
+        specifier: ^9.10.1
+        version: 9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2)
+      '@bull-board/nestjs':
+        specifier: ^9.10.1
+        version: 9.10.1(@bull-board/api@9.10.1(@bull-board/ui@9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2))(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2))(@nestjs/bull-shared@12.0.0(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)))(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/bullmq':
         specifier: ^12.0.0
         version: 12.0.0(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2))(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))
@@ -78,6 +87,9 @@ importers:
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
+      express-basic-auth:
+        specifier: ^1.2.1
+        version: 1.2.1
       ioredis:
         specifier: ^6.0.0
         version: 6.0.0
@@ -624,6 +636,34 @@ packages:
 
   '@borewit/text-codec@0.2.2':
     resolution: {integrity: sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ==}
+
+  '@bull-board/api@9.10.1':
+    resolution: {integrity: sha512-yaFVInFvQAKHQwW7xxdoWQaC2xW1f8JOAZ5k6Zl8GQBTnlhm6UmeRQUr2Gb6wMgfl5v61p2eSupPow2CEvz0ng==}
+    peerDependencies:
+      '@bull-board/ui': 9.10.1
+      bull: ^4.16.5
+      bullmq: ^5.56.0 || ^6.0.0
+    peerDependenciesMeta:
+      bull:
+        optional: true
+      bullmq:
+        optional: true
+
+  '@bull-board/express@9.10.1':
+    resolution: {integrity: sha512-sUXrFAwbllDNGyieB51Xr7bFa+f7uPdWWPMcArROYlAXsZqrG0HyRPf81bpCX8ZnBGTUcbsEq9jSdRpEfbqm7g==}
+
+  '@bull-board/nestjs@9.10.1':
+    resolution: {integrity: sha512-u63jkaco3CBaJuasHVrB1E7MHo6bwfdnn3A1hb3Sl7EKnhsh1QIiBUx8DQd6s/8S5rOUbYiXh0sCaJkShl5RhQ==}
+    peerDependencies:
+      '@bull-board/api': ^9.10.1
+      '@nestjs/bull-shared': ^10.0.0 || ^11.0.0 || ^12.0.0
+      '@nestjs/common': ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
+      '@nestjs/core': ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
+      reflect-metadata: ^0.1.13 || ^0.2.0
+      rxjs: ^7.8.1
+
+  '@bull-board/ui@9.10.1':
+    resolution: {integrity: sha512-1E0zbLaljf+Zhx3nDUotzsG2Dz7/4i72nWCxKkFwxfz65MKXfObo2mXWMuIDoXAeWSa3sm7hlPj3h3scts4DaQ==}
 
   '@colors/colors@1.5.0':
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
@@ -2919,6 +2959,10 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
+  basic-auth@2.0.1:
+    resolution: {integrity: sha512-NF+epuEdnUYVlGuhaxbbq+dvJttwLnGY+YixlXlME5KpQ5W3CnXA5cVTneY3SPbPDRkcjMbifrwmFYcClgOZeg==}
+    engines: {node: '>= 0.8'}
+
   bcrypt@6.0.0:
     resolution: {integrity: sha512-cU8v/EGSrnH+HnxV2z0J7/blxH8gq7Xh2JFT6Aroax7UohdmiJJlxApMxtKfuI7z68NvvVcmR78k2LbT6efhRg==}
     engines: {node: '>= 18'}
@@ -3524,6 +3568,11 @@ packages:
   effect@3.20.0:
     resolution: {integrity: sha512-qMLfDJscrNG8p/aw+IkT9W7fgj50Z4wG5bLBy0Txsxz8iUHjDIkOgO3SV0WZfnQbNG2VJYb0b+rDLMrhM4+Krw==}
 
+  ejs@6.0.1:
+    resolution: {integrity: sha512-UaaM14yby8U3k02ihS1Bmj5Kz2d7CCQM1scxpgs4Mhkq8F1wR2gl3+Ts4h5Ne4Mnt7M9m4Dw7jsuMr3+xO4vZA==}
+    engines: {node: '>=0.12.18'}
+    hasBin: true
+
   electron-to-chromium@1.5.368:
     resolution: {integrity: sha512-7RckJJK4uESJF9PxvfMWd3TGqIiieUTG4HxnKaKuIpGbcr+r2ZEB3g2gAhCP3Fqm42vJSzLfgab9eva/C4/XVw==}
 
@@ -3826,6 +3875,9 @@ packages:
   expect@29.7.0:
     resolution: {integrity: sha512-2Zks0hf1VLFYI1kbh0I5jP3KHHyCHpkfyHBzsSXRFgl/Bg9mWYfMW8oD+PdMPlEwy5HNsR9JutYy6pMeOh61nw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+
+  express-basic-auth@1.2.1:
+    resolution: {integrity: sha512-L6YQ1wQ/mNjVLAmK3AG1RK6VkokA1BIY6wmiH304Xtt/cLTps40EusZsU1Uop+v9lTDPxdtzbFmdXfFO3KEnwA==}
 
   express-rate-limit@8.5.2:
     resolution: {integrity: sha512-5Kb34ipNX694DH48vN9irak1Qx30nb0PLYHXfJgw4YEjiC3ZEmZJhwOp+VfiCYwFzvFTdB9QkArYS5kXa2cx2A==}
@@ -5731,6 +5783,9 @@ packages:
     resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
     engines: {node: '>=4'}
 
+  redis-info@3.1.0:
+    resolution: {integrity: sha512-ER4L9Sh/vm63DkIE0bkSjxluQlioBiBgf5w1UuldaW/3vPcecdljVDisZhmnCMvsxHNiARTTDDHGg9cGwTfrKg==}
+
   reflect-metadata@0.2.2:
     resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
 
@@ -5833,6 +5888,9 @@ packages:
   safe-array-concat@1.1.3:
     resolution: {integrity: sha512-AURm5f0jYEOydBj7VQlVvDrjeFgthDdEF5H1dP+6mNpoXOMo1quQqJ4wvJDyRZ9+pO3kGWoOdmV08cSv2aJV6Q==}
     engines: {node: '>=0.4'}
+
+  safe-buffer@5.1.2:
+    resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
 
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
@@ -6499,6 +6557,14 @@ packages:
       typescript:
         optional: true
 
+  valibot@1.5.0:
+    resolution: {integrity: sha512-nil6AkP2TChWL43Z5uJ6GTxX01CUA+g8LWUM+N/rB9NBbkUMaUsi9PUNzlUPgoKASgmx9f7eGOYpJ04/fSa6FQ==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   validate-npm-package-name@7.0.2:
     resolution: {integrity: sha512-hVDIBwsRruT73PbK7uP5ebUt+ezEtCmzZz3F59BSr2F6OVFnJ/6h8liuvdLrQ88Xmnk6/+xGGuq+pG9WwTuy3A==}
     engines: {node: ^20.17.0 || >=22.9.0}
@@ -7002,6 +7068,45 @@ snapshots:
     optional: true
 
   '@borewit/text-codec@0.2.2': {}
+
+  '@bull-board/api@9.10.1(@bull-board/ui@9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2))(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2)':
+    dependencies:
+      '@bull-board/ui': 9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2)
+      redis-info: 3.1.0
+      valibot: 1.5.0(typescript@5.9.2)
+    optionalDependencies:
+      bullmq: 6.3.4(ioredis@6.0.0)(pg@8.21.0)
+    transitivePeerDependencies:
+      - typescript
+
+  '@bull-board/express@9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2)':
+    dependencies:
+      '@bull-board/api': 9.10.1(@bull-board/ui@9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2))(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2)
+      '@bull-board/ui': 9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2)
+      ejs: 6.0.1
+      express: 5.2.1
+    transitivePeerDependencies:
+      - bull
+      - bullmq
+      - supports-color
+      - typescript
+
+  '@bull-board/nestjs@9.10.1(@bull-board/api@9.10.1(@bull-board/ui@9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2))(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2))(@nestjs/bull-shared@12.0.0(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)))(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+    dependencies:
+      '@bull-board/api': 9.10.1(@bull-board/ui@9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2))(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2)
+      '@nestjs/bull-shared': 12.0.0(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@nestjs/common': 10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core': 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
+
+  '@bull-board/ui@9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2)':
+    dependencies:
+      '@bull-board/api': 9.10.1(@bull-board/ui@9.10.1(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2))(bullmq@6.3.4(ioredis@6.0.0)(pg@8.21.0))(typescript@5.9.2)
+    transitivePeerDependencies:
+      - bull
+      - bullmq
+      - typescript
 
   '@colors/colors@1.5.0':
     optional: true
@@ -9520,6 +9625,10 @@ snapshots:
 
   baseline-browser-mapping@2.10.34: {}
 
+  basic-auth@2.0.1:
+    dependencies:
+      safe-buffer: 5.1.2
+
   bcrypt@6.0.0:
     dependencies:
       node-addon-api: 8.8.0
@@ -10089,6 +10198,8 @@ snapshots:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
 
+  ejs@6.0.1: {}
+
   electron-to-chromium@1.5.368: {}
 
   emittery@0.13.1: {}
@@ -10524,6 +10635,10 @@ snapshots:
       jest-matcher-utils: 29.7.0
       jest-message-util: 29.7.0
       jest-util: 29.7.0
+
+  express-basic-auth@1.2.1:
+    dependencies:
+      basic-auth: 2.0.1
 
   express-rate-limit@8.5.2(express@5.2.1):
     dependencies:
@@ -12689,6 +12804,10 @@ snapshots:
 
   redis-errors@1.2.0: {}
 
+  redis-info@3.1.0:
+    dependencies:
+      lodash: 4.18.1
+
   reflect-metadata@0.2.2: {}
 
   reflect.getprototypeof@1.0.10:
@@ -12802,6 +12921,8 @@ snapshots:
       get-intrinsic: 1.3.0
       has-symbols: 1.1.0
       isarray: 2.0.5
+
+  safe-buffer@5.1.2: {}
 
   safe-buffer@5.2.1: {}
 
@@ -13565,6 +13686,10 @@ snapshots:
       convert-source-map: 2.0.0
 
   valibot@1.2.0(typescript@5.9.2):
+    optionalDependencies:
+      typescript: 5.9.2
+
+  valibot@1.5.0(typescript@5.9.2):
     optionalDependencies:
       typescript: 5.9.2
 
