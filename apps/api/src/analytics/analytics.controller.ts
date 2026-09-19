@@ -1,7 +1,14 @@
-import { Controller, Get, Param, Query, Req, UseGuards } from "@nestjs/common";
+import {
+	Controller,
+	Get,
+	Param,
+	Query,
+	Req,
+	Res,
+	UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-
-import { Request } from "express";
+import type { Request, Response } from "express";
 import { JwtAuthGuard } from "src/auth/jwt/jwt-auth.guard";
 import { AnalyticsService } from "./analytics.service";
 import { AnalyticsFilterDto } from "./dto/analytics.dto";
@@ -26,26 +33,68 @@ export class AnalyticsController {
 	}
 
 	@Get(":id/clicks-per-day")
-	getClicksPerDay(
+	async getClicksPerDay(
 		@Param("id") linkId: string,
 		@Query() filter: AnalyticsFilterDto,
 		@Req() req: AuthenticatedRequest,
+		@Res({ passthrough: true }) res: Response,
 	) {
-		return this.analyticsService.getClicksPerDay(linkId, req.user.sub, filter);
+		const result = await this.analyticsService.getClicksPerDay(
+			linkId,
+			req.user.sub,
+			filter,
+		);
+
+		res.setHeader("X-Cache", result.cacheStatus);
+
+		return result.data;
 	}
 
 	@Get(":id/by-country")
-	getByCountry(@Param("id") linkId: string, @Req() req: AuthenticatedRequest) {
-		return this.analyticsService.getByCountry(linkId, req.user.sub);
+	async getByCountry(
+		@Param("id") linkId: string,
+		@Req() req: AuthenticatedRequest,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		const result = await this.analyticsService.getByCountry(
+			linkId,
+			req.user.sub,
+		);
+
+		res.setHeader("X-Cache", result.cacheStatus);
+
+		return result.data;
 	}
 
 	@Get(":id/by-device")
-	getByDevice(@Param("id") linkId: string, @Req() req: AuthenticatedRequest) {
-		return this.analyticsService.getByDevice(linkId, req.user.sub);
+	async getByDevice(
+		@Param("id") linkId: string,
+		@Req() req: AuthenticatedRequest,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		const result = await this.analyticsService.getByDevice(
+			linkId,
+			req.user.sub,
+		);
+
+		res.setHeader("X-Cache", result.cacheStatus);
+
+		return result.data;
 	}
 
 	@Get(":id/by-referrer")
-	getByReferrer(@Param("id") linkId: string, @Req() req: AuthenticatedRequest) {
-		return this.analyticsService.getByReferrer(linkId, req.user.sub);
+	async getByReferrer(
+		@Param("id") linkId: string,
+		@Req() req: AuthenticatedRequest,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		const result = await this.analyticsService.getByReferrer(
+			linkId,
+			req.user.sub,
+		);
+
+		res.setHeader("X-Cache", result.cacheStatus);
+
+		return result.data;
 	}
 }

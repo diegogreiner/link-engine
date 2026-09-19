@@ -1,15 +1,48 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { CACHE_MANAGER, Cache } from "@nestjs/cache-manager";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { PrismaService } from "src/prisma/service";
+import {
+	ANALYTICS_CACHE_TTL,
+	DAILY_CACHE_TTL,
+	PRODUCT_TIME_ZONE,
+} from "./analytics.constants";
+import { AnalyticsCacheService } from "./analytics-cache.service";
+import {
+	CacheResult,
+	CountryAnalytics,
+	DailyAnalytics,
+	DeviceAnalytics,
+	ReferrerAnalytics,
+} from "./cache-result.types";
 import { AnalyticsFilterDto } from "./dto/analytics.dto";
-
-const PRODUCT_TIME_ZONE = "America/Sao_Paulo";
 
 @Injectable()
 export class AnalyticsService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		private readonly prisma: PrismaService,
+		@Inject(CACHE_MANAGER)
+		private readonly cacheManager: Cache,
+		private readonly analyticsCache: AnalyticsCacheService,
+	) {}
 
-	async getByCountry(linkId: string, userId: string) {
+	async getByCountry(
+		linkId: string,
+		userId: string,
+	): Promise<CacheResult<CountryAnalytics[]>> {
+		const version = await this.analyticsCache.getCacheVersion(userId, linkId);
+
+		const cacheKey = `analytics:${userId}:${linkId}:` + `v${version}:country`;
+
+		const cached = await this.cacheManager.get<CountryAnalytics[]>(cacheKey);
+
+		if (cached !== undefined) {
+			return {
+				data: cached,
+				cacheStatus: "HIT",
+			};
+		}
+
 		await this.validateOwnership(linkId, userId);
 
 		const result = await this.prisma.linkAccess.groupBy({
@@ -22,13 +55,36 @@ export class AnalyticsService {
 			},
 		});
 
-		return result.map((item) => ({
+		const response: CountryAnalytics[] = result.map((item) => ({
 			country: item.country ?? "Unknown",
 			clicks: item._count.country,
 		}));
+
+		await this.cacheManager.set(cacheKey, response, ANALYTICS_CACHE_TTL);
+
+		return {
+			data: response,
+			cacheStatus: "MISS",
+		};
 	}
 
-	async getByDevice(linkId: string, userId: string) {
+	async getByDevice(
+		linkId: string,
+		userId: string,
+	): Promise<CacheResult<DeviceAnalytics[]>> {
+		const version = await this.analyticsCache.getCacheVersion(userId, linkId);
+
+		const cacheKey = `analytics:${userId}:${linkId}:` + `v${version}:device`;
+
+		const cached = await this.cacheManager.get<DeviceAnalytics[]>(cacheKey);
+
+		if (cached !== undefined) {
+			return {
+				data: cached,
+				cacheStatus: "HIT",
+			};
+		}
+
 		await this.validateOwnership(linkId, userId);
 
 		const result = await this.prisma.linkAccess.groupBy({
@@ -41,13 +97,36 @@ export class AnalyticsService {
 			},
 		});
 
-		return result.map((item) => ({
+		const response: DeviceAnalytics[] = result.map((item) => ({
 			deviceType: item.deviceType ?? "Unknown",
 			clicks: item._count.deviceType,
 		}));
+
+		await this.cacheManager.set(cacheKey, response, ANALYTICS_CACHE_TTL);
+
+		return {
+			data: response,
+			cacheStatus: "MISS",
+		};
 	}
 
-	async getByReferrer(linkId: string, userId: string) {
+	async getByReferrer(
+		linkId: string,
+		userId: string,
+	): Promise<CacheResult<ReferrerAnalytics[]>> {
+		const version = await this.analyticsCache.getCacheVersion(userId, linkId);
+
+		const cacheKey = `analytics:${userId}:${linkId}:` + `v${version}:referrer`;
+
+		const cached = await this.cacheManager.get<ReferrerAnalytics[]>(cacheKey);
+
+		if (cached !== undefined) {
+			return {
+				data: cached,
+				cacheStatus: "HIT",
+			};
+		}
+
 		await this.validateOwnership(linkId, userId);
 
 		const result = await this.prisma.linkAccess.groupBy({
@@ -60,22 +139,47 @@ export class AnalyticsService {
 			},
 		});
 
-		return result.map((item) => ({
+		const response: ReferrerAnalytics[] = result.map((item) => ({
 			referer: item.referer ?? "Direct",
 			clicks: item._count._all,
 		}));
+
+		await this.cacheManager.set(cacheKey, response, ANALYTICS_CACHE_TTL);
+
+		return {
+			data: response,
+			cacheStatus: "MISS",
+		};
 	}
 
 	async getClicksPerDay(
 		linkId: string,
 		userId: string,
 		filter: AnalyticsFilterDto,
-	) {
+	): Promise<CacheResult<DailyAnalytics[]>> {
+		const version = await this.analyticsCache.getCacheVersion(userId, linkId);
+
+		const cacheKey =
+			`analytics:${userId}:${linkId}:` +
+			`v${version}:daily:` +
+			`${filter.from ?? "all"}:` +
+			`${filter.to ?? "all"}`;
+
+		const cached = await this.cacheManager.get<DailyAnalytics[]>(cacheKey);
+
+		if (cached !== undefined) {
+			return {
+				data: cached,
+				cacheStatus: "HIT",
+			};
+		}
+
 		await this.validateOwnership(linkId, userId);
 
 		const from = filter.from
 			? fromZonedTime(`${filter.from}T00:00:00`, PRODUCT_TIME_ZONE)
 			: undefined;
+
 		const toExclusive = filter.to
 			? fromZonedTime(
 					`${this.addDaysToDateString(filter.to, 1)}T00:00:00`,
@@ -120,15 +224,26 @@ export class AnalyticsService {
 			{} as Record<string, number>,
 		);
 
-		return Object.entries(grouped).map(([date, clicks]) => ({
-			date,
-			clicks,
-		}));
+		const result: DailyAnalytics[] = Object.entries(grouped).map(
+			([date, clicks]) => ({
+				date,
+				clicks,
+			}),
+		);
+
+		await this.cacheManager.set(cacheKey, result, DAILY_CACHE_TTL);
+
+		return {
+			data: result,
+			cacheStatus: "MISS",
+		};
 	}
 
 	async findSummary(userId: string) {
 		const today = formatInTimeZone(new Date(), PRODUCT_TIME_ZONE, "yyyy-MM-dd");
+
 		const startOfToday = fromZonedTime(`${today}T00:00:00`, PRODUCT_TIME_ZONE);
+
 		const startOfTomorrow = fromZonedTime(
 			`${this.addDaysToDateString(today, 1)}T00:00:00`,
 			PRODUCT_TIME_ZONE,
@@ -138,30 +253,42 @@ export class AnalyticsService {
 			[
 				this.prisma.linkAccess.count({
 					where: {
-						link: { userId },
+						link: {
+							userId,
+						},
 					},
 				}),
+
 				this.prisma.linkAccess.count({
 					where: {
-						link: { userId },
+						link: {
+							userId,
+						},
 						createdAt: {
 							gte: startOfToday,
 							lt: startOfTomorrow,
 						},
 					},
 				}),
+
 				this.prisma.link.findFirst({
-					where: { userId },
+					where: {
+						userId,
+					},
 					select: {
 						id: true,
 						shortCode: true,
 						originalUrl: true,
 						_count: {
-							select: { linkAccesses: true },
+							select: {
+								linkAccesses: true,
+							},
 						},
 					},
 					orderBy: {
-						linkAccesses: { _count: "desc" },
+						linkAccesses: {
+							_count: "desc",
+						},
 					},
 				}),
 			],
@@ -183,6 +310,7 @@ export class AnalyticsService {
 
 	private addDaysToDateString(dateString: string, days: number): string {
 		const [year, month, day] = dateString.split("-").map(Number);
+
 		const date = new Date(Date.UTC(year, month - 1, day + days));
 
 		return date.toISOString().slice(0, 10);

@@ -3,6 +3,7 @@ import { BullBoardModule } from "@bull-board/nestjs";
 import { BullModule } from "@nestjs/bullmq";
 import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { AnalyticsModule } from "src/analytics/analytics.module";
 import { LinksModule } from "src/links/links.module";
 import { ClickProcessor } from "./click.processor";
 import { CLICK_QUEUE } from "./queue.constants";
@@ -34,6 +35,7 @@ import { CLICK_QUEUE } from "./queue.constants";
 			adapter: BullMQAdapter,
 		}),
 		LinksModule,
+		AnalyticsModule,
 	],
 	providers: [ClickProcessor],
 	exports: [BullModule],

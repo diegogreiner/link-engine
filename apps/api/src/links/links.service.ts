@@ -1,6 +1,7 @@
 import { GoneException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { nanoid } from "nanoid";
+import { AnalyticsCacheService } from "src/analytics/analytics-cache.service";
 import { PrismaService } from "src/prisma/service";
 import { UAParser } from "ua-parser-js";
 import { CreateLinkDto } from "./dto/create-link.dto";
@@ -8,7 +9,10 @@ import { UpdateLinkDto } from "./dto/update-link.dto";
 
 @Injectable()
 export class LinksService {
-	constructor(private prisma: PrismaService) {}
+	constructor(
+		private prisma: PrismaService,
+		private readonly analyticsCache: AnalyticsCacheService,
+	) {}
 
 	async create(dto: CreateLinkDto, userId: string) {
 		const shortCode = await this.generateShortCode();
@@ -41,6 +45,8 @@ export class LinksService {
 			throw new NotFoundException("Link não encontrado");
 		}
 
+		await this.analyticsCache.invalidateAnalyticsCache(userId, id);
+
 		return this.findOne(id, userId);
 	}
 
@@ -55,6 +61,8 @@ export class LinksService {
 		if (result.count === 0) {
 			throw new NotFoundException("Link não encontrado");
 		}
+
+		await this.analyticsCache.deleteAnalyticsCacheVersion(userId, id);
 
 		return { message: "Link excluído com sucesso" };
 	}
@@ -135,7 +143,7 @@ export class LinksService {
 	async registerAccess(
 		linkId: string,
 		data: { ip: string; userAgent: string; referer: string; eventId: string },
-	) {
+	): Promise<boolean> {
 		try {
 			const parser = new UAParser(data?.userAgent);
 
@@ -181,13 +189,15 @@ export class LinksService {
 					deviceType: device.type ?? "desktop",
 				},
 			});
+
+			return true;
 		} catch (error) {
 			if (
 				error instanceof Prisma.PrismaClientKnownRequestError &&
 				error.code === "P2002"
 			) {
 				console.log(`Evento ${data.eventId} já processado`);
-				return;
+				return false;
 			}
 
 			throw error;
