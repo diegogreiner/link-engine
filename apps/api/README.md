@@ -26,6 +26,27 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Swagger e OpenAPI
+
+Com a API em execução, a documentação interativa fica disponível em
+`http://localhost:3000/swagger`.
+
+O build gera `openapi.json` automaticamente. Para validar o contrato completo,
+incluindo o lint e a compilação de um cliente TypeScript gerado, execute:
+
+```bash
+pnpm openapi:check
+```
+
+Os comandos também podem ser executados separadamente:
+
+```bash
+pnpm openapi:generate
+pnpm openapi:lint
+pnpm openapi:client
+pnpm openapi:check-client
+```
+
 ## Project setup
 
 ```bash

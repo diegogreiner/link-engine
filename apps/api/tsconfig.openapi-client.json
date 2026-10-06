@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "incremental": false,
+    "noEmit": true,
+    "lib": ["ES2021", "DOM"]
+  },
+  "include": ["generated/openapi-client/**/*.ts"]
+}

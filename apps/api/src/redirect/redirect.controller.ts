@@ -1,10 +1,25 @@
 import { InjectQueue } from "@nestjs/bullmq";
 import { Controller, Get, Param, Req, Res } from "@nestjs/common";
+import {
+	ApiGoneResponse,
+	ApiNotFoundResponse,
+	ApiOkResponse,
+	ApiOperation,
+	ApiParam,
+	ApiProduces,
+	ApiResponse,
+	ApiSecurity,
+	ApiTags,
+	ApiTooManyRequestsResponse,
+} from "@nestjs/swagger";
 import { Queue } from "bullmq";
 import { Request, Response } from "express";
+import { ErrorResponseDto } from "src/common/dto/error-response.dto";
 import { LinksService } from "src/links/links.service";
 import { CLICK_QUEUE, PROCESS_CLICK_JOB } from "src/queue/queue.constants";
 
+@ApiTags("Redirect")
+@ApiSecurity({})
 @Controller()
 export class RedirectController {
 	constructor(
@@ -13,6 +28,29 @@ export class RedirectController {
 	) {}
 
 	@Get(":shortCode")
+	@ApiOperation({ summary: "Redirecionar um código curto para a URL original" })
+	@ApiParam({ name: "shortCode", example: "aB3xYz" })
+	@ApiProduces("text/html")
+	@ApiOkResponse({
+		description: "Página HTML intermediária usada quando o link possui GA4",
+		schema: { type: "string" },
+	})
+	@ApiResponse({
+		status: 302,
+		description: "Redirecionamento para a URL original",
+		headers: {
+			Location: {
+				description: "URL original do link",
+				schema: { type: "string", format: "uri" },
+			},
+		},
+	})
+	@ApiNotFoundResponse({ type: ErrorResponseDto })
+	@ApiGoneResponse({
+		description: "O link expirou",
+		type: ErrorResponseDto,
+	})
+	@ApiTooManyRequestsResponse({ type: ErrorResponseDto })
 	async redirect(
 		@Param("shortCode") shortCode: string,
 		@Req() req: Request,
