@@ -13,7 +13,7 @@ import { JwtAuthGuard } from "src/auth/jwt/jwt-auth.guard";
 import { AnalyticsService } from "./analytics.service";
 import { AnalyticsFilterDto } from "./dto/analytics.dto";
 
-type AuthenticatedRequest = Request & {
+export type AuthenticatedRequest = Request & {
 	user: {
 		sub: string;
 		email: string;
