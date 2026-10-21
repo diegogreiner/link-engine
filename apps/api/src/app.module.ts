@@ -10,6 +10,11 @@ import { RedirectModule } from "./redirect/redirect.module";
 
 import basicAuth = require("express-basic-auth");
 
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
+import { APP_GUARD } from "@nestjs/core";
+import { minutes, ThrottlerModule } from "@nestjs/throttler";
+import { RateLimitGuard, ResilientThrottlerStorage } from "./throttler";
+
 @Module({
 	imports: [
 		ConfigModule.forRoot({
@@ -44,6 +49,36 @@ import basicAuth = require("express-basic-auth");
 				};
 			},
 		}),
+		ThrottlerModule.forRootAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: (config: ConfigService) => {
+				const redisUrl = config.getOrThrow<string>("REDIS_URL");
+
+				const redisStorage = new ThrottlerStorageRedisService(redisUrl, {
+					connectTimeout: 1_000,
+					enableOfflineQueue: false,
+					maxRetriesPerRequest: 1,
+				});
+
+				return {
+					throttlers: [
+						{
+							name: "default",
+							ttl: minutes(1),
+							limit: 100,
+						},
+					],
+					storage: new ResilientThrottlerStorage(redisStorage),
+				};
+			},
+		}),
+	],
+	providers: [
+		{
+			provide: APP_GUARD,
+			useClass: RateLimitGuard,
+		},
 	],
 })
 export class AppModule {}

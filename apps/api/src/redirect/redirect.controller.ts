@@ -12,6 +12,7 @@ import {
 	ApiTags,
 	ApiTooManyRequestsResponse,
 } from "@nestjs/swagger";
+import { minutes, Throttle } from "@nestjs/throttler";
 import { Queue } from "bullmq";
 import { Request, Response } from "express";
 import { ErrorResponseDto } from "src/common/dto/error-response.dto";
@@ -27,6 +28,12 @@ export class RedirectController {
 		@InjectQueue(CLICK_QUEUE) private queue: Queue,
 	) {}
 
+	@Throttle({
+		default: {
+			limit: 20,
+			ttl: minutes(1),
+		},
+	})
 	@Get(":shortCode")
 	@ApiOperation({ summary: "Redirecionar um código curto para a URL original" })
 	@ApiParam({ name: "shortCode", example: "aB3xYz" })
@@ -58,8 +65,7 @@ export class RedirectController {
 	) {
 		const link = await this.linksService.findByShortCode(shortCode);
 
-		const ip =
-			req.headers["x-forwarded-for"]?.toString().split(",")[0].trim() || req.ip;
+		const ip = req.ip;
 		const userAgent = req.headers["user-agent"] || "";
 		const referer = req.headers["referer"] || "";
 

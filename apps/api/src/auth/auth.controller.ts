@@ -20,6 +20,7 @@ import {
 	ApiTooManyRequestsResponse,
 	ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
+import { minutes, Throttle } from "@nestjs/throttler";
 import { Request } from "express";
 import { ErrorResponseDto } from "src/common/dto/error-response.dto";
 import { MessageResponseDto } from "src/common/dto/message-response.dto";
@@ -45,6 +46,12 @@ type AuthenticatedRequest = Request & {
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
+	@Throttle({
+		default: {
+			limit: 20,
+			ttl: minutes(1),
+		},
+	})
 	@Post("register")
 	@ApiSecurity({})
 	@ApiOperation({ summary: "Cadastrar um usuário e iniciar uma sessão" })
@@ -59,6 +66,12 @@ export class AuthController {
 		return this.authService.register(dto);
 	}
 
+	@Throttle({
+		default: {
+			limit: 20,
+			ttl: minutes(1),
+		},
+	})
 	@Post("login")
 	@ApiSecurity({})
 	@HttpCode(HttpStatus.OK)
@@ -71,6 +84,12 @@ export class AuthController {
 		return this.authService.login(dto);
 	}
 
+	@Throttle({
+		default: {
+			limit: 20,
+			ttl: minutes(1),
+		},
+	})
 	@Post("refresh")
 	@ApiSecurity({})
 	@HttpCode(HttpStatus.OK)
