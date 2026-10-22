@@ -1,225 +1,216 @@
-import { GoneException, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
-import { nanoid } from "nanoid";
-import { AnalyticsCacheService } from "src/analytics/analytics-cache.service";
-import { PrismaService } from "src/prisma/service";
-import { UAParser } from "ua-parser-js";
-import { CreateLinkDto } from "./dto/create-link.dto";
-import { UpdateLinkDto } from "./dto/update-link.dto";
+import {
+  GoneException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { nanoid } from 'nanoid';
+import { AnalyticsCacheService } from 'src/analytics/analytics-cache.service';
+import { PrismaService } from 'src/prisma/service';
+import { UAParser } from 'ua-parser-js';
+import { CreateLinkDto } from './dto/create-link.dto';
+import { UpdateLinkDto } from './dto/update-link.dto';
 
 @Injectable()
 export class LinksService {
-	constructor(
-		private prisma: PrismaService,
-		private readonly analyticsCache: AnalyticsCacheService,
-	) {}
+  private readonly logger = new Logger(LinksService.name);
 
-	async create(dto: CreateLinkDto, userId: string) {
-		const shortCode = await this.generateShortCode();
+  constructor(
+    private prisma: PrismaService,
+    private readonly analyticsCache: AnalyticsCacheService,
+  ) {}
 
-		return this.prisma.link.create({
-			data: {
-				userId,
-				shortCode,
-				originalUrl: dto.originalUrl,
-				expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
-				ga4MeasurementId: dto.ga4MeasurementId || null,
-			},
-		});
-	}
+  async create(dto: CreateLinkDto, userId: string) {
+    const shortCode = await this.generateShortCode();
 
-	async update(id: string, dto: UpdateLinkDto, userId: string) {
-		const result = await this.prisma.link.updateMany({
-			where: {
-				id,
-				userId,
-			},
-			data: {
-				...dto,
-				expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
-				ga4MeasurementId: dto.ga4MeasurementId ?? undefined,
-			},
-		});
+    return this.prisma.link.create({
+      data: {
+        userId,
+        shortCode,
+        originalUrl: dto.originalUrl,
+        expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+        ga4MeasurementId: dto.ga4MeasurementId || null,
+      },
+    });
+  }
 
-		if (result.count === 0) {
-			throw new NotFoundException("Link não encontrado");
-		}
+  async update(id: string, dto: UpdateLinkDto, userId: string) {
+    const result = await this.prisma.link.updateMany({
+      where: {
+        id,
+        userId,
+      },
+      data: {
+        ...dto,
+        expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+        ga4MeasurementId: dto.ga4MeasurementId ?? undefined,
+      },
+    });
 
-		await this.analyticsCache.invalidateAnalyticsCache(userId, id);
+    if (result.count === 0) {
+      throw new NotFoundException('Link não encontrado');
+    }
 
-		return this.findOne(id, userId);
-	}
+    await this.analyticsCache.invalidateAnalyticsCache(userId, id);
 
-	async remove(id: string, userId: string) {
-		const result = await this.prisma.link.deleteMany({
-			where: {
-				id,
-				userId,
-			},
-		});
+    return this.findOne(id, userId);
+  }
 
-		if (result.count === 0) {
-			throw new NotFoundException("Link não encontrado");
-		}
+  async remove(id: string, userId: string) {
+    const result = await this.prisma.link.deleteMany({
+      where: {
+        id,
+        userId,
+      },
+    });
 
-		await this.analyticsCache.deleteAnalyticsCacheVersion(userId, id);
+    if (result.count === 0) {
+      throw new NotFoundException('Link não encontrado');
+    }
 
-		return { message: "Link excluído com sucesso" };
-	}
+    await this.analyticsCache.deleteAnalyticsCacheVersion(userId, id);
 
-	async findAll(userId: string) {
-		const links = await this.prisma.link.findMany({
-			where: {
-				userId,
-			},
-			include: {
-				_count: {
-					select: {
-						linkAccesses: true,
-					},
-				},
-			},
-			orderBy: {
-				createdAt: "desc",
-			},
-		});
+    return { message: 'Link excluído com sucesso' };
+  }
 
-		return links.map((i) => ({
-			id: i.id,
-			originalUrl: i.originalUrl,
-			shortCode: i.shortCode,
-			createdAt: i.createdAt,
-			expiresAt: i.expiresAt,
-			ga4MeasurementId: i.ga4MeasurementId,
-			clicks: i._count.linkAccesses,
-		}));
-	}
+  async findAll(userId: string) {
+    const links = await this.prisma.link.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        _count: {
+          select: {
+            linkAccesses: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
-	async findOne(id: string, userId: string) {
-		const link = await this.prisma.link.findFirst({
-			where: {
-				id,
-				userId,
-			},
-			include: {
-				_count: {
-					select: {
-						linkAccesses: true,
-					},
-				},
-			},
-		});
+    return links.map((i) => ({
+      id: i.id,
+      originalUrl: i.originalUrl,
+      shortCode: i.shortCode,
+      createdAt: i.createdAt,
+      expiresAt: i.expiresAt,
+      ga4MeasurementId: i.ga4MeasurementId,
+      clicks: i._count.linkAccesses,
+    }));
+  }
 
-		if (!link) {
-			throw new NotFoundException("Nenhum link encontrado");
-		}
+  async findOne(id: string, userId: string) {
+    const link = await this.prisma.link.findFirst({
+      where: {
+        id,
+        userId,
+      },
+      include: {
+        _count: {
+          select: {
+            linkAccesses: true,
+          },
+        },
+      },
+    });
 
-		const { _count, ...linkData } = link;
+    if (!link) {
+      throw new NotFoundException('Nenhum link encontrado');
+    }
 
-		return {
-			...linkData,
-			clicks: _count.linkAccesses,
-		};
-	}
+    const { _count, ...linkData } = link;
 
-	async findByShortCode(shortCode: string) {
-		const link = await this.prisma.link.findUnique({
-			where: {
-				shortCode,
-			},
-		});
+    return {
+      ...linkData,
+      clicks: _count.linkAccesses,
+    };
+  }
 
-		if (!link) {
-			throw new NotFoundException("Link não encontrado");
-		}
+  async findByShortCode(shortCode: string) {
+    const link = await this.prisma.link.findUnique({
+      where: {
+        shortCode,
+      },
+    });
 
-		if (link.expiresAt && link.expiresAt < new Date()) {
-			throw new GoneException("Link expirado");
-		}
+    if (!link) {
+      throw new NotFoundException('Link não encontrado');
+    }
 
-		return link;
-	}
+    if (link.expiresAt && link.expiresAt < new Date()) {
+      throw new GoneException('Link expirado');
+    }
 
-	async registerAccess(
-		linkId: string,
-		data: { ip: string; userAgent: string; referer: string; eventId: string },
-	): Promise<boolean> {
-		try {
-			const parser = new UAParser(data?.userAgent);
+    return link;
+  }
 
-			const browser = parser.getBrowser();
-			const os = parser.getOS();
-			const device = parser.getDevice();
+  async registerAccess(
+    linkId: string,
+    data: {
+      ipHash: string | null;
+      country: string | null;
+      city: string | null;
+      userAgent: string;
+      referer: string;
+      eventId: string;
+    },
+  ): Promise<boolean> {
+    try {
+      const parser = new UAParser(data?.userAgent);
 
-			let country: string | null = null;
-			let city: string | null = null;
+      const browser = parser.getBrowser();
+      const os = parser.getOS();
+      const device = parser.getDevice();
 
-			if (data.ip) {
-				try {
-					const response = await fetch(
-						`http://ip-api.com/json/${data.ip}?fields=status,country,city`,
-						{
-							signal: AbortSignal.timeout(3000),
-						},
-					);
+      await this.prisma.linkAccess.create({
+        data: {
+          linkId,
+          country: data.country,
+          city: data.city,
+          ipHash: data.ipHash,
+          eventId: data.eventId,
+          referer: data.referer,
+          browser: browser.name,
+          browserVersion: browser.version,
+          os: os.name,
+          osVersion: os.version,
+          deviceType: device.type ?? 'desktop',
+        },
+      });
 
-					const geo = await response.json();
+      return true;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        this.logger.debug(`Evento ${data.eventId} já processado`);
+        return false;
+      }
 
-					if (geo.status === "success") {
-						country = geo.country;
-						city = geo.city;
-					}
-				} catch (error) {
-					console.error(error);
-				}
-			}
+      throw error;
+    }
+  }
 
-			await this.prisma.linkAccess.create({
-				data: {
-					linkId,
-					country,
-					city,
-					ip: data.ip,
-					eventId: data.eventId,
-					referer: data.referer,
-					browser: browser.name,
-					browserVersion: browser.version,
-					os: os.name,
-					osVersion: os.version,
-					deviceType: device.type ?? "desktop",
-				},
-			});
+  private async generateShortCode() {
+    let shortCode: string;
+    let exists: boolean;
 
-			return true;
-		} catch (error) {
-			if (
-				error instanceof Prisma.PrismaClientKnownRequestError &&
-				error.code === "P2002"
-			) {
-				console.log(`Evento ${data.eventId} já processado`);
-				return false;
-			}
+    do {
+      shortCode = nanoid(6);
 
-			throw error;
-		}
-	}
+      const link = await this.prisma.link.findUnique({
+        where: {
+          shortCode,
+        },
+      });
 
-	private async generateShortCode() {
-		let shortCode: string;
-		let exists: boolean;
+      exists = !!link;
+    } while (exists);
 
-		do {
-			shortCode = nanoid(6);
-
-			const link = await this.prisma.link.findUnique({
-				where: {
-					shortCode,
-				},
-			});
-
-			exists = !!link;
-		} while (exists);
-
-		return shortCode;
-	}
+    return shortCode;
+  }
 }

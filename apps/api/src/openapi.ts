@@ -13,6 +13,7 @@ export function createOpenApiDocument(app: INestApplication): OpenAPIObject {
     .addTag('Links', 'Criação e gestão de links curtos')
     .addTag('Analytics', 'Métricas dos links do usuário')
     .addTag('Redirect', 'Redirecionamento público de links curtos')
+    .addTag('Health', 'Liveness e readiness da API')
     .addBearerAuth(
       {
         type: 'http',

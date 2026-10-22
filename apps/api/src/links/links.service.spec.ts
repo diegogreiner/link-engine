@@ -39,8 +39,6 @@ describe('LinksService', () => {
   };
   let service: LinksService;
   let nanoidMock: jest.MockedFunction<typeof nanoid>;
-  let fetchMock: jest.MockedFunction<typeof fetch>;
-  const originalFetch = global.fetch;
 
   const userId = 'user-1';
   const linkId = 'link-1';
@@ -77,8 +75,6 @@ describe('LinksService', () => {
         jest.fn<(userId: string, linkId: string) => Promise<void>>(),
     };
     nanoidMock = jest.mocked(nanoid);
-    fetchMock = jest.fn<typeof fetch>();
-    global.fetch = fetchMock;
     service = new LinksService(
       prisma as unknown as PrismaService,
       analyticsCache as unknown as AnalyticsCacheService,
@@ -86,7 +82,6 @@ describe('LinksService', () => {
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
     jest.useRealTimers();
     jest.restoreAllMocks();
   });
@@ -381,38 +376,29 @@ describe('LinksService', () => {
   });
 
   // Tradução: deve interpretar o user-agent, obter a localização e salvar o acesso.
-  it('should parse the user agent, fetch geolocation, and persist the access', async () => {
+  it('should parse the user agent and persist the pseudonymous access', async () => {
     // Mocks
     const access = {
-      ip: '203.0.113.10',
+      ipHash: 'hashed-ip',
+      country: 'Brazil',
+      city: 'São Paulo',
       userAgent:
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
         '(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
       referer: 'https://google.com',
       eventId: 'event-1',
     };
-    fetchMock.mockResolvedValue({
-      json: async () => ({
-        status: 'success',
-        country: 'Brazil',
-        city: 'São Paulo',
-      }),
-    } as Response);
 
     // Chamada
     const result = await service.registerAccess(linkId, access);
 
     // Resultados
-    expect(fetchMock).toHaveBeenCalledWith(
-      'http://ip-api.com/json/203.0.113.10?fields=status,country,city',
-      expect.objectContaining({ signal: expect.any(AbortSignal) }),
-    );
     expect(prisma.linkAccess.create).toHaveBeenCalledWith({
       data: {
         linkId,
         country: 'Brazil',
         city: 'São Paulo',
-        ip: access.ip,
+        ipHash: access.ipHash,
         eventId: access.eventId,
         referer: access.referer,
         browser: 'Chrome',
@@ -426,14 +412,12 @@ describe('LinksService', () => {
   });
 
   // Tradução: deve salvar o acesso sem localização quando a consulta externa falhar.
-  it('should persist the access without geolocation when the external lookup fails', async () => {
+  it('should persist the access without provider geolocation', async () => {
     // Mocks
-    const consoleError = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => undefined);
-    fetchMock.mockRejectedValue(new Error('geolocation unavailable'));
     const access = {
-      ip: '203.0.113.10',
+      ipHash: 'hashed-ip',
+      country: null,
+      city: null,
       userAgent: '',
       referer: '',
       eventId: 'event-2',
@@ -446,7 +430,6 @@ describe('LinksService', () => {
     expect(prisma.linkAccess.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ country: null, city: null }),
     });
-    expect(consoleError).toHaveBeenCalledWith(expect.any(Error));
     expect(result).toBe(true);
   });
 
@@ -457,12 +440,11 @@ describe('LinksService', () => {
       'Unique constraint failed',
       { code: 'P2002', clientVersion: 'test' },
     );
-    const consoleLog = jest
-      .spyOn(console, 'log')
-      .mockImplementation(() => undefined);
     prisma.linkAccess.create.mockRejectedValue(duplicateError);
     const access = {
-      ip: '',
+      ipHash: null,
+      country: null,
+      city: null,
       userAgent: '',
       referer: '',
       eventId: 'event-duplicate',
@@ -473,9 +455,6 @@ describe('LinksService', () => {
 
     // Resultados
     expect(result).toBe(false);
-    expect(consoleLog).toHaveBeenCalledWith(
-      expect.stringContaining(access.eventId),
-    );
   });
 
   // Tradução: deve propagar erros inesperados ocorridos ao salvar o acesso.
@@ -484,7 +463,9 @@ describe('LinksService', () => {
     const error = new Error('database unavailable');
     prisma.linkAccess.create.mockRejectedValue(error);
     const access = {
-      ip: '',
+      ipHash: null,
+      country: null,
+      city: null,
       userAgent: '',
       referer: '',
       eventId: 'event-3',

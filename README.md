@@ -1,159 +1,204 @@
-# Turborepo starter
+# Link Engine
 
-This Turborepo starter is maintained by the Turborepo core team.
+Encurtador de URLs com autenticação, links expiráveis, redirecionamento público,
+analytics e processamento assíncrono de cliques.
 
-## Using this example
+## Arquitetura
 
-Run the following command:
-
-```sh
-npx create-turbo@latest
+```mermaid
+flowchart LR
+  Browser[Next.js web] -->|JWT / REST| API[NestJS API]
+  Visitor[Visitante] -->|shortCode| API
+  API --> Postgres[(PostgreSQL / Neon)]
+  API --> Redis[(Redis)]
+  API --> Queue[BullMQ]
+  Queue --> Worker[Click processor]
+  Worker --> Postgres
+  Worker --> Redis
+  API --> Sentry[Sentry opcional]
 ```
 
-## What's inside?
+- `apps/web`: Next.js 16 e React 19.
+- `apps/api`: NestJS 10, Prisma 7, BullMQ e Swagger.
+- PostgreSQL/Neon: usuários, links, sessões e eventos de acesso.
+- Redis: filas, rate limiting e cache de analytics.
+- O worker BullMQ roda dentro da API; portanto a API deve ser publicada como
+  serviço/container persistente, não como função serverless.
 
-This Turborepo includes the following packages/apps:
+## Requisitos
 
-### Apps and Packages
+- Node.js `>=20.19.0`.
+- pnpm `9.0.0`.
+- Docker, para PostgreSQL e Redis locais.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## Setup local
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```powershell
+pnpm install --frozen-lockfile
+Copy-Item apps/api/.env.example apps/api/.env
+Copy-Item apps/web/.env.example apps/web/.env
+docker compose up -d
+pnpm prisma:generate
+pnpm --filter api exec prisma migrate dev
+pnpm dev
 ```
 
-Without global `turbo`, use your package manager:
+Serviços locais:
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+| Serviço    | URL                                  |
+| ---------- | ------------------------------------ |
+| Frontend   | `http://localhost:3001`              |
+| API        | `http://localhost:3000`              |
+| Swagger    | `http://localhost:3000/swagger`      |
+| Bull Board | `http://localhost:3000/admin/queues` |
+| Liveness   | `http://localhost:3000/health/live`  |
+| Readiness  | `http://localhost:3000/health/ready` |
+
+A API de produção atualmente referenciada pelo frontend é
+`https://link-engine-hfa1.onrender.com`. A URL pública do frontend deve ser
+registrada em `NEXT_PUBLIC_APP_URL` e adicionada a `CORS_ALLOWED_ORIGINS` antes
+do deploy.
+
+## Comandos de qualidade
+
+```powershell
+pnpm prisma:generate
+pnpm check-types
+pnpm lint
+pnpm test
+pnpm build
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+`lint` apenas valida. Para aplicar correções automáticas, use `lint:fix` dentro
+do app desejado.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## Variáveis de ambiente
 
-```sh
-turbo build --filter=docs
+Os arquivos de referência são:
+
+- `apps/api/.env.example`
+- `apps/web/.env.example`
+
+Nunca versione `.env`, URLs com credenciais, tokens ou segredos. Em produção,
+configure os valores no provedor e no GitHub Environment `production`.
+
+Variáveis importantes da API:
+
+| Variável                          | Finalidade                                                |
+| --------------------------------- | --------------------------------------------------------- |
+| `DATABASE_URL`                    | Conexão PostgreSQL; use a URL pooled do Neon na aplicação |
+| `DATABASE_POOL_MAX`               | Máximo de conexões PostgreSQL por instância               |
+| `REDIS_URL`                       | Cache, rate limiting e BullMQ                             |
+| `CORS_ALLOWED_ORIGINS`            | Origens exatas, separadas por vírgula                     |
+| `CORS_PREVIEW_HOST_PREFIX/SUFFIX` | Limites dos hosts de preview autorizados                  |
+| `IP_HASH_SECRET`                  | Chave exclusiva usada no HMAC dos IPs                     |
+| `IP_HASH_RETENTION_DAYS`          | Prazo para remover o hash; padrão 30 dias                 |
+| `SENTRY_DSN`                      | Ativa o monitoramento de erros quando preenchido          |
+| `SENTRY_TRACES_SAMPLE_RATE`       | Amostragem entre `0` e `1`                                |
+| `APP_VERSION`                     | Commit/release incluído nos logs e no Sentry              |
+
+## CORS e proxies
+
+- Produção aceita somente as origens exatas em `CORS_ALLOWED_ORIGINS`.
+- Previews precisam corresponder simultaneamente ao prefixo e ao sufixo
+  configurados e usar HTTPS.
+- `localhost:3000/3001` e `127.0.0.1:3000/3001` só são aceitos fora de produção.
+- Requisições sem `Origin` são permitidas para health checks e integrações
+  servidor-servidor.
+- Em produção, `TRUST_PROXY_HOPS` define quantos proxies confiáveis existem
+  entre o cliente e a API. O padrão é `1`.
+
+CORS não substitui autenticação ou autorização.
+
+## Banco, migrations e deploy
+
+Desenvolvimento cria migrations com `prisma migrate dev`. Produção somente
+aplica migrations já revisadas:
+
+```powershell
+pnpm --filter api prisma:migrate:deploy
 ```
 
-Without global `turbo`:
+O workflow `.github/workflows/quality.yml` executa `prisma generate`,
+typecheck, lint, testes e build. Após um push aprovado em `main`, o job
+`migrate-production` aplica migrations usando `MIGRATION_DATABASE_URL` (quando
+configurado) ou o fallback `DATABASE_URL` do GitHub Environment `production`.
+Prefira uma credencial exclusiva de migration, com os privilégios de DDL que a
+credencial da aplicação não precisa possuir.
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+Para bloquear merge, execute o workflow uma vez e configure um GitHub Ruleset
+para `main`, exigindo o check `quality`. Recomenda-se também exigir PR e pelo
+menos uma aprovação.
 
-### Develop
+### Migration de privacidade
 
-To develop all apps and packages, run the following command:
+A migration `20261022000000_pseudonymize_link_access_ip`:
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+1. adiciona `ipHash`;
+2. apaga irreversivelmente todos os IPs brutos existentes;
+3. instala um trigger que impede gravações na coluna legada durante o rollout.
 
-```sh
-cd my-turborepo
-turbo dev
-```
+A coluna `ip` foi mantida temporariamente para expand/contract. Após uma versão
+estável sem instâncias antigas, ela e o trigger podem ser removidos por uma nova
+migration.
 
-Without global `turbo`, use your package manager:
+## Logs, erros e health checks
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
-```
+A API escreve logs JSON no stdout, incluindo `requestId`, serviço, ambiente,
+versão, método, rota, status e duração. O header `x-request-id` recebido é
+propagado; quando ausente, a API gera um UUID.
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Headers, cookies, tokens, senhas e IPs são removidos/redigidos. O provedor deve
+coletar stdout e alertar, no mínimo, para:
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+- taxa de respostas `5xx`;
+- latência p95;
+- falhas finais do BullMQ;
+- readiness indisponível.
 
-```sh
-turbo dev --filter=web
-```
+Com `SENTRY_DSN`, erros HTTP inesperados e a última falha de cada job são
+enviados ao Sentry sem PII padrão. Configure `APP_VERSION` com o SHA do deploy
+para associar eventos a releases.
 
-Without global `turbo`:
+- `/health/live` verifica somente o processo.
+- `/health/ready` executa checks com timeout no PostgreSQL e Redis.
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+O liveness não depende do banco/Redis para evitar ciclos de reinício quando um
+serviço externo estiver indisponível.
 
-### Remote Caching
+## Privacidade e retenção de IP
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+O IP bruto não entra na fila nem no PostgreSQL. Antes de enfileirar o clique, a
+API calcula `HMAC-SHA256(IP, IP_HASH_SECRET)`. Esse hash é pseudônimo, não um
+dado anonimamente irreversível, e deve permanecer protegido.
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+País e cidade são lidos apenas dos headers do provedor (`x-vercel-ip-country`,
+`x-vercel-ip-city` ou `cf-ipcountry`). A API não envia IP a serviços externos de
+geolocalização.
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+O workflow `.github/workflows/privacy-maintenance.yml` roda diariamente e
+remove `ipHash` de eventos mais antigos que `IP_HASH_RETENTION_DAYS` (30 dias
+por padrão). O restante do evento permanece para métricas agregadas. Alterações
+de finalidade ou prazo devem passar por revisão de privacidade/LGPD.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+## Pooling e cold start do Neon
 
-```sh
-cd my-turborepo
-turbo login
-```
+- A aplicação usa uma URL pooled do Neon e um pool padrão de 5 conexões por
+  instância.
+- O total potencial é `DATABASE_POOL_MAX × número máximo de instâncias`; deixe
+  margem para migrations e administração.
+- O timeout de conexão padrão é 5 segundos e conexões ociosas fecham em 30
+  segundos.
+- O Prisma conecta no startup para falhar cedo se a configuração estiver
+  inválida e desconecta durante shutdown.
+- Fechar conexões ociosas permite scale-to-zero, mas a primeira consulta após
+  inatividade pode ter latência de cold start. Se o SLO de redirect não aceitar
+  essa latência, mantenha o compute Neon ativo.
 
-Without global `turbo`, use your package manager:
+## Decisões técnicas
 
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+- BullMQ torna o redirect independente do processamento de analytics.
+- Redis indisponível no rate limiting usa fallback em memória por instância.
+- Migrations rodam uma única vez no pipeline, não no startup de cada réplica.
+- Logs ficam no stdout; persistência e alertas pertencem à plataforma.
+- Alterações destrutivas de schema devem usar expand/contract.

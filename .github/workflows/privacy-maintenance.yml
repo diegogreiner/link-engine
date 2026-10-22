@@ -1,0 +1,46 @@
+name: Privacy maintenance
+
+on:
+  schedule:
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: production-privacy-maintenance
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup-ip-hashes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      IP_HASH_RETENTION_DAYS: ${{ vars.IP_HASH_RETENTION_DAYS || '30' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma:generate
+
+      - name: Clear expired IP hashes
+        run: pnpm --filter api privacy:cleanup

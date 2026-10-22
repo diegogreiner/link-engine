@@ -7,11 +7,9 @@ import { z } from "zod";
 
 import { Button } from "@/src/components/ui/button";
 import {
-	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
-	CardTitle,
 } from "@/src/components/ui/card";
 import {
 	Form,
@@ -68,7 +66,7 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 			form.reset();
 
 			onSuccess?.();
-		} catch (err) {
+		} catch {
 			setError("Erro ao salvar link");
 		} finally {
 			setLoading(false);

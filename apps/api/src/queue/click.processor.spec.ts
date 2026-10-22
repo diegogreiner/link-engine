@@ -16,7 +16,9 @@ type ClickJob = Parameters<ClickProcessor['process']>[0];
 const jobData = {
   eventId: 'event-1',
   linkId: 'link-1',
-  ip: '203.0.113.10',
+  ipHash: 'hashed-ip',
+  country: 'BR',
+  city: 'São Paulo',
   userAgent: 'Mozilla/5.0',
   referer: 'https://google.com',
   userId: 'user-1',
@@ -46,7 +48,12 @@ describe('ClickProcessor', () => {
       linksService as unknown as LinksService,
       analyticsCache as unknown as AnalyticsCacheService,
     );
-    job = { data: jobData } as unknown as Job<typeof jobData>;
+    job = {
+      data: jobData,
+      name: 'process-click',
+      attemptsMade: 0,
+      opts: { attempts: 4 },
+    } as unknown as Job<typeof jobData>;
   });
 
   // Tradução: deve encaminhar o ID do link e os dados do job ao registrar o acesso.

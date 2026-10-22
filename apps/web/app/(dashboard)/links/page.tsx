@@ -36,7 +36,28 @@ export default function LinksPage() {
 	}
 
 	useEffect(() => {
-		loadLinks();
+		let isActive = true;
+
+		void LinksService.findAll()
+			.then((data) => {
+				if (isActive) {
+					setLinks(data);
+				}
+			})
+			.catch(() => {
+				if (isActive) {
+					toast.error("Erro ao carregar links");
+				}
+			})
+			.finally(() => {
+				if (isActive) {
+					setLoading(false);
+				}
+			});
+
+		return () => {
+			isActive = false;
+		};
 	}, []);
 
 	async function handleDelete(id: string) {

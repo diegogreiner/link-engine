@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -45,7 +44,9 @@ model LinkAccess {
   linkId  String
   eventId String @unique
 
+  /// Coluna legada mantida durante a fase expand/contract. Deve permanecer nula.
   ip      String?
+  ipHash  String?
   referer String?
 
   browser        String?
