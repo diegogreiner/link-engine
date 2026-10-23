@@ -4,7 +4,7 @@ Encurtador de URLs com autenticação, links expiráveis, redirecionamento públ
 analytics e processamento assíncrono de cliques.
 
 ## Arquitetura
-
+ 
 ```mermaid
 flowchart LR
   Browser[Next.js web] -->|JWT / REST| API[NestJS API]
