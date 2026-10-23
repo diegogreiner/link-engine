@@ -2,7 +2,7 @@
 
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CreateLinkDialog } from "@/src/components/create-link-dialog";
 import { PageHeader } from "@/src/components/page-header";
 import { ShortLink } from "@/src/components/short-link";
@@ -59,21 +59,38 @@ export default function DashboardPage() {
 	const [errorLinks, setErrorLinks] = useState<string | null>(null);
 	const [errorSummary, setErrorSummary] = useState<string | null>(null);
 
-	useEffect(() => {
-		async function load() {
-			try {
-				setLoadingLinks(true);
-				setErrorLinks(null);
-				const data = await LinksService.findAll();
-				setLinks(data);
-			} catch {
-				setErrorLinks("Erro ao carregar links");
-			} finally {
-				setLoadingLinks(false);
-			}
+	const loadLinks = useCallback(async () => {
+		try {
+			const data = await LinksService.findAll();
+			setLinks(data);
+			setErrorLinks(null);
+		} catch {
+			setErrorLinks("Erro ao carregar links");
+		} finally {
+			setLoadingLinks(false);
 		}
+	}, []);
 
-		load();
+	useEffect(() => {
+		let isActive = true;
+
+		void LinksService.findAll()
+			.then((data) => {
+				if (isActive) {
+					setLinks(data);
+					setErrorLinks(null);
+				}
+			})
+			.catch(() => {
+				if (isActive) setErrorLinks("Erro ao carregar links");
+			})
+			.finally(() => {
+				if (isActive) setLoadingLinks(false);
+			});
+
+		return () => {
+			isActive = false;
+		};
 	}, []);
 
 	useEffect(() => {
@@ -101,7 +118,7 @@ export default function DashboardPage() {
 			<PageHeader
 				title="Dashboard"
 				description="Visão geral dos seus links e cliques."
-				action={<CreateLinkDialog />}
+				action={<CreateLinkDialog onSuccess={loadLinks} />}
 			/>
 
 			<Card className="grid grid-cols-3 gap-0 divide-x divide-border py-0">

@@ -2,7 +2,7 @@
 
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CreateLinkDialog } from "@/src/components/create-link-dialog";
 import { DeleteConfirmDialog } from "@/src/components/delete-confirm-dialog";
@@ -39,34 +39,29 @@ export default function LinksPage() {
 	const [loading, setLoading] = useState(true);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 
-	async function loadLinks() {
-		setLoading(true);
+	const loadLinks = useCallback(async () => {
 		try {
 			const data = await LinksService.findAll();
 			setLinks(data);
+		} catch {
+			toast.error("Não foi possível carregar os links.");
 		} finally {
 			setLoading(false);
 		}
-	}
+	}, []);
 
 	useEffect(() => {
 		let isActive = true;
 
 		void LinksService.findAll()
 			.then((data) => {
-				if (isActive) {
-					setLinks(data);
-				}
+				if (isActive) setLinks(data);
 			})
 			.catch(() => {
-				if (isActive) {
-					toast.error("Não foi possível carregar os links.");
-				}
+				if (isActive) toast.error("Não foi possível carregar os links.");
 			})
 			.finally(() => {
-				if (isActive) {
-					setLoading(false);
-				}
+				if (isActive) setLoading(false);
 			});
 
 		return () => {

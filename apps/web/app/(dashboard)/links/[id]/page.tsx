@@ -3,7 +3,7 @@
 import { AlertCircle, ChevronLeft } from "lucide-react";
 import NextLink from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { LinkForm } from "@/src/components/link-form";
 import { PageHeader } from "@/src/components/page-header";
 import { ShortLink } from "@/src/components/short-link";
@@ -24,12 +24,25 @@ export default function LinkDetailsPage() {
 	const [link, setLink] = useState<LinkType | null>(null);
 	const [error, setError] = useState(false);
 
+	const loadLink = useCallback(async () => {
+		try {
+			const data = await LinksService.findOne(id);
+			setLink(data);
+			setError(false);
+		} catch {
+			setError(true);
+		}
+	}, [id]);
+
 	useEffect(() => {
 		let isActive = true;
 
-		LinksService.findOne(id)
+		void LinksService.findOne(id)
 			.then((data) => {
-				if (isActive) setLink(data);
+				if (isActive) {
+					setLink(data);
+					setError(false);
+				}
 			})
 			.catch(() => {
 				if (isActive) setError(true);
@@ -80,6 +93,7 @@ export default function LinkDetailsPage() {
 								originalUrl: link.originalUrl,
 								ga4MeasurementId: link.ga4MeasurementId ?? "",
 							}}
+							onSuccess={loadLink}
 						/>
 					)}
 				</div>
