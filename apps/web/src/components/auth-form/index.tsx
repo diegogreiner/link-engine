@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,8 +27,30 @@ interface AuthFormProps {
 
 const schema = z.object({
 	email: z.string().min(1, "Informe seu e-mail").email("E-mail inválido"),
-	password: z.string().min(6, "A senha precisa ter pelo menos 6 caracteres"),
+	password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres"),
 });
+
+type ApiErrorResponse = {
+	message?: string | string[];
+};
+
+function getApiErrorMessage(error: unknown) {
+	if (!axios.isAxiosError<ApiErrorResponse>(error)) {
+		return "Não foi possível falar com o servidor. Tente de novo em instantes.";
+	}
+
+	const message = error.response?.data?.message;
+
+	if (Array.isArray(message)) {
+		return message.join(". ");
+	}
+
+	if (typeof message === "string" && message.length > 0) {
+		return message;
+	}
+
+	return "Não foi possível falar com o servidor. Tente de novo em instantes.";
+}
 
 const COPY = {
 	login: {
@@ -92,8 +115,8 @@ export function AuthForm({ mode }: AuthFormProps) {
 			}
 
 			router.push("/");
-		} catch {
-			setError("Não foi possível falar com o servidor. Tente de novo em instantes.");
+		} catch (error) {
+			setError(getApiErrorMessage(error));
 		} finally {
 			setIsLoading(false);
 		}
@@ -148,7 +171,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 											mode === "login" ? "current-password" : "new-password"
 										}
 										placeholder={
-											mode === "register" ? "Mínimo de 6 caracteres" : undefined
+											mode === "register" ? "Mínimo de 8 caracteres" : undefined
 										}
 										disabled={isSubmitting}
 										className="h-10"
