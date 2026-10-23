@@ -119,6 +119,11 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt" as const,
   },
+
+  // Qualquer redirecionamento de login do next-auth usa a tela do app.
+  pages: {
+    signIn: "/login",
+  },
 };
 
 const handler = NextAuth(authOptions);
