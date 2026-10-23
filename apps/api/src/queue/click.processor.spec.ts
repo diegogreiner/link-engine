@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 jest.mock('@nestjs/bullmq', () => ({
   Processor: () => (target: unknown) => target,
@@ -7,6 +7,7 @@ jest.mock('@nestjs/bullmq', () => ({
 jest.mock('nanoid', () => ({ nanoid: jest.fn() }));
 
 import type { Job } from 'bullmq';
+import { Logger } from '@nestjs/common';
 import type { AnalyticsCacheService } from 'src/analytics/analytics-cache.service';
 import type { LinksService } from 'src/links/links.service';
 import { ClickProcessor } from './click.processor';
@@ -35,6 +36,10 @@ describe('ClickProcessor', () => {
   };
   let processor: ClickProcessor;
   let job: ClickJob;
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   beforeEach(() => {
     linksService = {
@@ -101,6 +106,9 @@ describe('ClickProcessor', () => {
   it('should propagate errors so BullMQ can retry the job', async () => {
     // Mocks
     const error = new Error('database unavailable');
+    const logError = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
     linksService.registerAccess.mockRejectedValue(error);
 
     // Chamada
@@ -108,6 +116,10 @@ describe('ClickProcessor', () => {
 
     // Resultados
     await expect(promise).rejects.toBe(error);
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('tentativa 1/4'),
+      error.stack,
+    );
     expect(analyticsCache.invalidateAnalyticsCache).not.toHaveBeenCalled();
   });
 });

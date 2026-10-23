@@ -3,7 +3,12 @@ import { ConfigService } from '@nestjs/config';
 import { isCorsOriginAllowed } from './cors';
 
 function config(values: Record<string, string>): ConfigService {
-  return new ConfigService(values);
+  return new ConfigService({
+    CORS_ALLOWED_ORIGINS: '',
+    CORS_PREVIEW_HOST_PREFIX: '',
+    CORS_PREVIEW_HOST_SUFFIX: '',
+    ...values,
+  });
 }
 
 describe('isCorsOriginAllowed', () => {
