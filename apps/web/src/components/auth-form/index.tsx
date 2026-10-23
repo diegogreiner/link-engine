@@ -1,21 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
 import { AuthService } from "@/src/services/auth-service";
 import { Button } from "../ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "../ui/card";
 import {
 	Form,
 	FormControl,
@@ -31,17 +25,28 @@ interface AuthFormProps {
 }
 
 const schema = z.object({
-	email: z
-		.string()
-		.min(1, "E-mail é obrigatório")
-		.email("E-mail inválido"),
-	password: z
-		.string()
-		.min(6, "Senha deve ter no mínimo 6 caracteres"),
+	email: z.string().min(1, "Informe seu e-mail").email("E-mail inválido"),
+	password: z.string().min(6, "A senha precisa ter pelo menos 6 caracteres"),
 });
+
+const COPY = {
+	login: {
+		title: "Entrar",
+		description: "Use o e-mail e a senha da sua conta.",
+		submit: "Entrar",
+		submitting: "Entrando...",
+	},
+	register: {
+		title: "Criar conta",
+		description: "Leva menos de um minuto. Você só precisa de um e-mail.",
+		submit: "Criar conta",
+		submitting: "Criando conta...",
+	},
+} as const;
 
 export function AuthForm({ mode }: AuthFormProps) {
 	const router = useRouter();
+	const copy = COPY[mode];
 
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
@@ -66,7 +71,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 			if (mode === "register") {
 				await AuthService.register(values);
 
-				setSuccess("Conta criada com sucesso! Redirecionando...");
+				setSuccess("Conta criada. Levando você para o login...");
 
 				setTimeout(() => {
 					router.push("/login");
@@ -82,13 +87,13 @@ export function AuthForm({ mode }: AuthFormProps) {
 			});
 
 			if (result?.error) {
-				setError("E-mail ou senha inválidos");
+				setError("E-mail ou senha incorretos. Confira e tente de novo.");
 				return;
 			}
 
 			router.push("/");
 		} catch {
-			setError("Ocorreu um erro. Tente novamente.");
+			setError("Não foi possível falar com o servidor. Tente de novo em instantes.");
 		} finally {
 			setIsLoading(false);
 		}
@@ -97,104 +102,107 @@ export function AuthForm({ mode }: AuthFormProps) {
 	const isSubmitting = form.formState.isSubmitting || isLoading;
 
 	return (
-		<Card className="w-full max-w-md border-0 bg-gray-50 shadow-lg lg:bg-white">
-			<CardHeader>
-				<CardTitle>{mode === "login" ? "Entrar" : "Criar Conta"}</CardTitle>
+		<div className="space-y-8">
+			<div className="space-y-2">
+				<h2 className="text-2xl font-semibold tracking-tight">{copy.title}</h2>
+				<p className="text-sm text-muted-foreground">{copy.description}</p>
+			</div>
 
-				<CardDescription>
-					{mode === "login"
-						? "Informe suas credenciais para acessar"
-						: "Preencha seus dados para criar sua conta"}
-				</CardDescription>
-			</CardHeader>
+			<Form {...form}>
+				<form
+					onSubmit={form.handleSubmit(onSubmit)}
+					className="space-y-5"
+					noValidate
+				>
+					<FormField
+						control={form.control}
+						name="email"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>E-mail</FormLabel>
+								<FormControl>
+									<Input
+										type="email"
+										autoComplete="email"
+										placeholder="voce@empresa.com"
+										disabled={isSubmitting}
+										className="h-10"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 
-			<CardContent>
-				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-						<FormField
-							control={form.control}
-							name={"email"}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>E-mail</FormLabel>
+					<FormField
+						control={form.control}
+						name="password"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Senha</FormLabel>
+								<FormControl>
+									<Input
+										type="password"
+										autoComplete={
+											mode === "login" ? "current-password" : "new-password"
+										}
+										placeholder={
+											mode === "register" ? "Mínimo de 6 caracteres" : undefined
+										}
+										disabled={isSubmitting}
+										className="h-10"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 
-									<FormControl>
-										<Input
-											type="email"
-											placeholder="email@empresa.com"
-											disabled={isSubmitting}
-											{...field}
-										/>
-									</FormControl>
-
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name={"password"}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Senha</FormLabel>
-
-									<FormControl>
-										<Input
-											type="password"
-											placeholder="********"
-											disabled={isSubmitting}
-											{...field}
-										/>
-									</FormControl>
-
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						{error && <p className="text-sm text-destructive">{error}</p>}
-						{success && <p className="text-sm text-green-600">{success}</p>}
-
-						<Button type="submit" className="w-full" disabled={isSubmitting}>
-							{isSubmitting ? (
-								<>
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									{mode === "login" ? "Entrando..." : "Cadastrando..."}
-								</>
-							) : mode === "login" ? (
-								"Entrar"
-							) : (
-								"Cadastrar"
-							)}
-						</Button>
-					</form>
-				</Form>
-
-				<div className="mt-4 text-center text-sm text-muted-foreground">
-					{mode === "login" ? (
-						<>
-							Não tem uma conta?{" "}
-							<a
-								href="/register"
-								className="font-medium text-primary hover:underline"
-							>
-								Criar conta
-							</a>
-						</>
-					) : (
-						<>
-							Já tem uma conta?{" "}
-							<a
-								href="/login"
-								className="font-medium text-primary hover:underline"
-							>
-								Fazer login
-							</a>
-						</>
+					{error && (
+						<p
+							role="alert"
+							className="flex items-start gap-2 rounded-lg border border-destructive/25 bg-destructive/6 px-3 py-2.5 text-sm text-destructive"
+						>
+							<AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+							{error}
+						</p>
 					)}
-				</div>
-			</CardContent>
-		</Card>
+					{success && (
+						<p
+							role="status"
+							className="flex items-start gap-2 rounded-lg border border-success/25 bg-success/6 px-3 py-2.5 text-sm text-success"
+						>
+							<CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+							{success}
+						</p>
+					)}
+
+					<Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+						{isSubmitting && <Loader2 className="animate-spin" aria-hidden="true" />}
+						{isSubmitting ? copy.submitting : copy.submit}
+					</Button>
+				</form>
+			</Form>
+
+			<p className="text-sm text-muted-foreground">
+				{mode === "login" ? (
+					<>
+						Ainda não tem conta?{" "}
+						<Link href="/register" className="font-medium text-primary hover:underline">
+							Criar conta
+						</Link>
+					</>
+				) : (
+					<>
+						Já tem conta?{" "}
+						<Link href="/login" className="font-medium text-primary hover:underline">
+							Entrar
+						</Link>
+					</>
+				)}
+			</p>
+		</div>
 	);
 }

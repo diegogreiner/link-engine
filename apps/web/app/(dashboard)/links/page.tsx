@@ -1,14 +1,17 @@
 "use client";
 
-import { BarChart3, Copy } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-import { Button } from "@/src/components/ui/button";
 import { CreateLinkDialog } from "@/src/components/create-link-dialog";
 import { DeleteConfirmDialog } from "@/src/components/delete-confirm-dialog";
 import { EditLinkDialog } from "@/src/components/edit-link-dialog";
+import { PageHeader } from "@/src/components/page-header";
+import { ShortLink } from "@/src/components/short-link";
+import { Button } from "@/src/components/ui/button";
+import { Card } from "@/src/components/ui/card";
+import { Skeleton } from "@/src/components/ui/skeleton";
 import {
 	Table,
 	TableBody,
@@ -17,7 +20,19 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/src/components/ui/table";
+import { displayUrl, formatDate, formatNumber } from "@/src/lib/format";
 import { LinksService, Link as LinkType } from "@/src/services/link-service";
+
+function EmptyState() {
+	return (
+		<div className="px-5 py-14 text-center">
+			<p className="font-medium">Nenhum link por aqui ainda</p>
+			<p className="mt-1 text-sm text-muted-foreground">
+				Crie o primeiro com o botão “Novo link”.
+			</p>
+		</div>
+	);
+}
 
 export default function LinksPage() {
 	const [links, setLinks] = useState<LinkType[]>([]);
@@ -26,7 +41,6 @@ export default function LinksPage() {
 
 	async function loadLinks() {
 		setLoading(true);
-
 		try {
 			const data = await LinksService.findAll();
 			setLinks(data);
@@ -46,7 +60,7 @@ export default function LinksPage() {
 			})
 			.catch(() => {
 				if (isActive) {
-					toast.error("Erro ao carregar links");
+					toast.error("Não foi possível carregar os links.");
 				}
 			})
 			.finally(() => {
@@ -64,116 +78,157 @@ export default function LinksPage() {
 		try {
 			setDeletingId(id);
 			await LinksService.remove(id);
-			toast.success("Link excluído com sucesso!");
+			toast.success("Link excluído");
 			await loadLinks();
 		} catch {
-			toast.error("Erro ao excluir link");
+			toast.error("Não foi possível excluir o link.");
 		} finally {
 			setDeletingId(null);
 		}
 	}
 
-	async function handleCopy(shortCode: string) {
-		const url = LinksService.getPublicUrl(shortCode);
-		await navigator.clipboard.writeText(url);
-		toast.success("Link copiado!");
+	function renderActions(link: LinkType) {
+		return (
+			<>
+				<Button size="icon-sm" variant="ghost" asChild className="text-muted-foreground">
+					<Link
+						href={`/analytics/${link.id}`}
+						aria-label={`Ver analytics de ${link.shortCode}`}
+						title="Ver analytics"
+					>
+						<BarChart3 aria-hidden="true" />
+					</Link>
+				</Button>
+				<EditLinkDialog
+					linkId={link.id}
+					initialUrl={link.originalUrl}
+					initialGa4={link.ga4MeasurementId}
+					onSuccess={loadLinks}
+				/>
+				<DeleteConfirmDialog
+					onConfirm={() => handleDelete(link.id)}
+					loading={deletingId === link.id}
+				/>
+			</>
+		);
 	}
 
 	return (
-		<div className="space-y-6">
-			<div className="flex items-center justify-between">
-				<div>
-					<h1 className="text-3xl font-bold text-gray-900">Links</h1>
-					<p className="text-gray-600">
-						Gerencie seus links encurtados.
-					</p>
-				</div>
+		<>
+			<PageHeader
+				title="Links"
+				description={
+					loading
+						? "Todos os seus links curtos."
+						: `${formatNumber(links.length)} ${links.length === 1 ? "link" : "links"} criados.`
+				}
+				action={<CreateLinkDialog onSuccess={loadLinks} />}
+			/>
 
-				<CreateLinkDialog onSuccess={loadLinks} />
-			</div>
+			{/* Celular: lista empilhada, sem rolagem horizontal */}
+			<Card className="gap-0 py-0 md:hidden">
+				{loading ? (
+					<div className="space-y-4 p-4">
+						{["a", "b", "c"].map((key) => (
+							<div key={key} className="space-y-2">
+								<Skeleton className="h-5 w-28" />
+								<Skeleton className="h-4 w-full" />
+							</div>
+						))}
+					</div>
+				) : links.length === 0 ? (
+					<EmptyState />
+				) : (
+					<ul className="divide-y divide-border">
+						{links.map((link) => (
+							<li key={link.shortCode} className="space-y-1.5 px-4 py-3.5">
+								<div className="flex items-center justify-between gap-3">
+									<ShortLink shortCode={link.shortCode} />
+									<span className="shrink-0 text-sm tabular-nums">
+										<span className="font-medium">{formatNumber(link.clicks)}</span>{" "}
+										<span className="text-muted-foreground">cliques</span>
+									</span>
+								</div>
+								<p className="truncate text-sm text-muted-foreground" title={link.originalUrl}>
+									{displayUrl(link.originalUrl)}
+								</p>
+								<div className="flex items-center justify-between gap-3">
+									<span className="text-xs text-muted-foreground tabular-nums">
+										Criado em {formatDate(link.createdAt)}
+									</span>
+									<div className="-mr-1.5 flex gap-0.5">{renderActions(link)}</div>
+								</div>
+							</li>
+						))}
+					</ul>
+				)}
+			</Card>
 
-			<div className="rounded-lg border border-gray-300 bg-white shadow-md overflow-hidden">
+			<Card className="hidden gap-0 py-0 md:flex">
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead className="text-gray-700 font-semibold">Short URL</TableHead>
-							<TableHead className="text-gray-700 font-semibold">URL Original</TableHead>
-							<TableHead className="text-gray-700 font-semibold">Cliques</TableHead>
-							<TableHead className="text-gray-700 font-semibold">Criado em</TableHead>
-							<TableHead className="text-gray-700 font-semibold">Ações</TableHead>
+							<TableHead>Link curto</TableHead>
+							<TableHead>Destino</TableHead>
+							<TableHead className="text-right">Cliques</TableHead>
+							<TableHead>Criado em</TableHead>
+							<TableHead className="w-0">
+								<span className="sr-only">Ações</span>
+							</TableHead>
 						</TableRow>
 					</TableHeader>
-
 					<TableBody>
 						{loading ? (
-							<TableRow key="loading">
-								<TableCell colSpan={5} className="text-center py-10">
-									Carregando...
-								</TableCell>
-							</TableRow>
+							["a", "b", "c", "d"].map((key) => (
+								<TableRow key={key}>
+									<TableCell>
+										<Skeleton className="h-5 w-24" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-64" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="ml-auto h-4 w-10" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-20" />
+									</TableCell>
+									<TableCell />
+								</TableRow>
+							))
 						) : links.length === 0 ? (
-							<TableRow key="empty">
-								<TableCell
-									colSpan={5}
-									className="text-center py-10 text-gray-500"
-								>
-									Nenhum link encontrado
+							<TableRow className="hover:bg-transparent">
+								<TableCell colSpan={5} className="p-0">
+									<EmptyState />
 								</TableCell>
 							</TableRow>
 						) : (
 							links.map((link) => (
 								<TableRow key={link.shortCode}>
-									<TableCell className="font-medium text-gray-900">
-										{link.shortCode}
-									</TableCell>
-
-									<TableCell className="max-w-[400px] truncate text-gray-700">
-										{link.originalUrl}
-									</TableCell>
-
-									<TableCell className="text-gray-700">{link.clicks ?? 0}</TableCell>
-
-									<TableCell className="text-gray-700">
-										{link.createdAt
-											? new Date(link.createdAt).toLocaleDateString()
-											: "-"}
-									</TableCell>
-
 									<TableCell>
-										<div className="flex gap-2">
-											<Button
-												size="icon"
-												variant="ghost"
-												onClick={() => handleCopy(link.shortCode)}
-											>
-												<Copy className="h-4 w-4" />
-											</Button>
-
-											<Button size="icon" variant="ghost" asChild>
-												<Link href={`/analytics/${link.id}`}>
-													<BarChart3 className="h-4 w-4" />
-												</Link>
-											</Button>
-
-											<EditLinkDialog
-												linkId={link.id}
-												initialUrl={link.originalUrl}
-												initialGa4={link.ga4MeasurementId}
-												onSuccess={loadLinks}
-											/>
-
-											<DeleteConfirmDialog
-												onConfirm={() => handleDelete(link.id)}
-												loading={deletingId === link.id}
-											/>
-										</div>
+										<ShortLink shortCode={link.shortCode} />
+									</TableCell>
+									<TableCell
+										className="max-w-[24rem] truncate text-muted-foreground"
+										title={link.originalUrl}
+									>
+										{displayUrl(link.originalUrl)}
+									</TableCell>
+									<TableCell className="text-right font-medium tabular-nums">
+										{formatNumber(link.clicks)}
+									</TableCell>
+									<TableCell className="text-muted-foreground tabular-nums">
+										{formatDate(link.createdAt)}
+									</TableCell>
+									<TableCell>
+										<div className="flex justify-end gap-1">{renderActions(link)}</div>
 									</TableCell>
 								</TableRow>
 							))
 						)}
 					</TableBody>
 				</Table>
-			</div>
-		</div>
+			</Card>
+		</>
 	);
 }

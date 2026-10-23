@@ -1,79 +1,63 @@
 "use client";
 
-import { BarChart3, Link2, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { cn } from "@/src/lib/utils";
+import { Brand } from "./brand";
+import { isNavItemActive, logout, navItems } from "./nav";
 
-import { signOut } from "next-auth/react";
-import { AuthService } from "@/src/services/auth-service";
-
-const items = [
-	{
-		label: "Dashboard",
-		href: "/",
-		icon: BarChart3,
-	},
-	{
-		label: "Links",
-		href: "/links",
-		icon: Link2,
-	},
-	{
-		label: "Analytics",
-		href: "/analytics",
-		icon: BarChart3,
-	},
-];
-
+/** Navegação lateral (desktop). No celular quem aparece é o Header. */
 export function Sidebar() {
 	const pathname = usePathname();
-
-	async function handleLogout() {
-		try {
-			await AuthService.logout();
-		} finally {
-			await signOut({ callbackUrl: "/login" });
-		}
-	}
+	const { data: session } = useSession();
 
 	return (
-		<aside className="w-64 bg-blue-900 text-white flex flex-col">
-			<div className="border-b border-white/10 h-16 p-4 py-0 flex items-center">
-				<h1 className="text-xl font-bold text-white">Link Engine</h1>
+		<aside className="hidden w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
+			<div className="flex h-16 items-center px-5">
+				<Brand />
 			</div>
 
-			<nav className="flex-1 p-4 space-y-2">
-				{items.map((item) => {
+			<nav aria-label="Principal" className="flex-1 space-y-1 px-3 pt-2">
+				{navItems.map((item) => {
 					const Icon = item.icon;
-
-					const active = pathname === item.href;
+					const active = isNavItemActive(pathname, item.href);
 
 					return (
 						<Link
 							key={item.href}
 							href={item.href}
-							className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium
-								${
-									active
-										? "bg-white/20 text-white shadow-sm"
-										: "text-white/70 hover:bg-white/10 hover:text-white"
-								}`}
+							aria-current={active ? "page" : undefined}
+							className={cn(
+								"flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+								active
+									? "bg-white/12 text-white"
+									: "text-white/70 hover:bg-white/6 hover:text-white",
+							)}
 						>
-							<Icon size={18} />
-
-							<span>{item.label}</span>
+							<Icon className="size-4.5" aria-hidden="true" />
+							{item.label}
 						</Link>
 					);
 				})}
 			</nav>
 
-			<div className="border-t border-white/10 p-4">
+			<div className="border-t border-sidebar-border px-3 py-3">
+				{session?.user?.email && (
+					<p
+						className="truncate px-3 pb-2 text-xs text-white/60"
+						title={session.user.email}
+					>
+						{session.user.email}
+					</p>
+				)}
 				<button
 					type="button"
-					onClick={handleLogout}
-					className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white"
+					onClick={logout}
+					className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/6 hover:text-white"
 				>
-					<LogOut size={18} />
+					<LogOut className="size-4.5" aria-hidden="true" />
 					Sair
 				</button>
 			</div>

@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -31,14 +32,17 @@ export function CreateLinkDialog({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button variant={variant}>
-					<Plus className="mr-2 h-4 w-4" />
-					Novo Link
+					<Plus aria-hidden="true" />
+					Novo link
 				</Button>
 			</DialogTrigger>
 
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Novo Link</DialogTitle>
+					<DialogTitle>Novo link</DialogTitle>
+					<DialogDescription>
+						Cole a URL longa. O código curto é gerado automaticamente.
+					</DialogDescription>
 				</DialogHeader>
 
 				<LinkForm onSuccess={handleSuccess} />

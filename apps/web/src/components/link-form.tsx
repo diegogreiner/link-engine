@@ -1,15 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { BarChart3, CheckCircle2, ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
-import Link from "next/link";
-import { BarChart3, Check, ExternalLink } from "lucide-react";
-
+import { ShortLink } from "@/src/components/short-link";
 import { Button } from "@/src/components/ui/button";
 import {
+	Form,
 	FormControl,
+	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -17,11 +20,9 @@ import {
 } from "@/src/components/ui/form";
 import { Input } from "@/src/components/ui/input";
 import { LinksService } from "@/src/services/link-service";
-import { toast } from "sonner";
-import { Form } from "@/src/components/ui/form";
 
 const schema = z.object({
-	originalUrl: z.string().url("Informe uma URL válida"),
+	originalUrl: z.string().url("Informe uma URL completa, começando com https://"),
 	ga4MeasurementId: z.string().optional(),
 });
 
@@ -62,11 +63,11 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 
 			if (id) {
 				await LinksService.update(id, payload);
-				toast.success("Link atualizado com sucesso!");
+				toast.success("Link atualizado");
 				setCreatedLink({ id, shortCode: "", originalUrl: data.originalUrl });
 			} else {
 				const result = await LinksService.create(payload);
-				toast.success("Link criado com sucesso!");
+				toast.success("Link criado");
 				setCreatedLink({
 					id: result.id,
 					shortCode: result.shortCode,
@@ -76,7 +77,7 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 
 			onSuccess?.();
 		} catch {
-			toast.error("Erro ao salvar link");
+			toast.error("Não foi possível salvar o link. Tente de novo.");
 		} finally {
 			setLoading(false);
 		}
@@ -84,38 +85,35 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 
 	if (createdLink) {
 		return (
-			<div className="space-y-4">
-				<div className="rounded-lg border border-green-200 bg-green-50 p-4">
-					<div className="flex items-center gap-2 text-green-700 font-medium mb-2">
-						<Check className="h-4 w-4" />
-						{id ? "Link atualizado!" : "Link criado com sucesso!"}
-					</div>
+			<div className="space-y-5">
+				<div className="space-y-4 rounded-lg border border-success/25 bg-success/6 p-4">
+					<p className="flex items-center gap-2 font-medium text-success">
+						<CheckCircle2 className="size-4" aria-hidden="true" />
+						{id ? "Link atualizado" : "Link criado. Já pode compartilhar."}
+					</p>
 
 					{createdLink.shortCode && (
-						<div className="space-y-1">
-							<p className="text-sm text-gray-600">Short URL:</p>
-							<p className="text-sm font-mono font-medium text-gray-900">
-								{LinksService.getPublicUrl(createdLink.shortCode)}
-							</p>
-						</div>
+						<ShortLink shortCode={createdLink.shortCode} showHost size="lg" />
 					)}
 
-					<div className="flex gap-2 mt-3">
-						<Button variant="outline" size="sm" asChild>
-							<a
-								href={LinksService.getPublicUrl(createdLink.shortCode)}
-								target="_blank"
-								rel="noopener noreferrer"
-							>
-								<ExternalLink className="mr-1 h-3.5 w-3.5" />
-								Abrir Link
-							</a>
-						</Button>
+					<div className="flex flex-wrap gap-2">
+						{createdLink.shortCode && (
+							<Button variant="outline" size="sm" asChild>
+								<a
+									href={LinksService.getPublicUrl(createdLink.shortCode)}
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									<ExternalLink aria-hidden="true" />
+									Abrir link
+								</a>
+							</Button>
+						)}
 
 						<Button variant="outline" size="sm" asChild>
 							<Link href={`/analytics/${createdLink.id}`}>
-								<BarChart3 className="mr-1 h-3.5 w-3.5" />
-								Ver Analytics
+								<BarChart3 aria-hidden="true" />
+								Ver analytics
 							</Link>
 						</Button>
 					</div>
@@ -130,7 +128,7 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 							form.reset();
 						}}
 					>
-						Criar outro link
+						{id ? "Editar de novo" : "Criar outro link"}
 					</Button>
 				</div>
 			</div>
@@ -139,15 +137,21 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
 				<FormField
 					control={form.control}
 					name="originalUrl"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>URL Original</FormLabel>
+							<FormLabel>URL de destino</FormLabel>
 							<FormControl>
-								<Input placeholder="https://github.com" {...field} />
+								<Input
+									type="url"
+									inputMode="url"
+									placeholder="https://www.seusite.com.br/pagina"
+									autoFocus={!id}
+									{...field}
+								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -159,13 +163,16 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 					name="ga4MeasurementId"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>GA4 Measurement ID (opcional)</FormLabel>
+							<FormLabel>
+								ID do Google Analytics 4
+								<span className="font-normal text-muted-foreground">(opcional)</span>
+							</FormLabel>
 							<FormControl>
-								<Input placeholder="G-XXXXXXXXXX" {...field} />
+								<Input placeholder="G-XXXXXXXXXX" className="font-mono" {...field} />
 							</FormControl>
-							<p className="text-xs text-muted-foreground">
-								Ex: G-XXXXXXXXXX. Se preenchido, o analytics do Google sera rastreado quando alguem acessar o link.
-							</p>
+							<FormDescription className="text-xs">
+								Com ele, cada acesso ao link também é enviado para o seu GA4.
+							</FormDescription>
 							<FormMessage />
 						</FormItem>
 					)}
@@ -173,11 +180,7 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 
 				<div className="flex justify-end">
 					<Button type="submit" disabled={loading}>
-						{loading
-							? "Salvando..."
-							: id
-								? "Salvar Alterações"
-								: "Criar Link"}
+						{loading ? "Salvando..." : id ? "Salvar alterações" : "Criar link"}
 					</Button>
 				</div>
 			</form>

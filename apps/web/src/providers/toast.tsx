@@ -4,7 +4,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 	return (
 		<>
 			{children}
-			<Toaster />
+			<Toaster position="bottom-right" toastOptions={{ classNames: { toast: "font-sans" } }} />
 		</>
 	);
 }

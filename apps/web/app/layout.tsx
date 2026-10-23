@@ -1,17 +1,22 @@
 import { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/src/providers/toast";
 import { SessionProvider } from "@/src/providers/session-provider";
+import { Providers } from "@/src/providers/toast";
 
-const geistSans = Geist({
-	variable: "--font-geist-sans",
+// Plex Sans para a interface; Plex Mono só para os códigos curtos.
+const plexSans = IBM_Plex_Sans({
+	variable: "--font-plex-sans",
 	subsets: ["latin"],
+	weight: ["400", "500", "600", "700"],
+	display: "swap",
 });
 
-const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
+const plexMono = IBM_Plex_Mono({
+	variable: "--font-plex-mono",
 	subsets: ["latin"],
+	weight: ["400", "500"],
+	display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -29,10 +34,10 @@ export default function RootLayout({
 }>) {
 	return (
 		<html
-			lang="en"
-			className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+			lang="pt-BR"
+			className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}
 		>
-			<body className="min-h-full flex flex-col">
+			<body className="flex min-h-full flex-col">
 				<SessionProvider>
 					<Providers>{children}</Providers>
 				</SessionProvider>

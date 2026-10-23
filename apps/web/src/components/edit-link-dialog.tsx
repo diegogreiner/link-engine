@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -34,14 +35,23 @@ export function EditLinkDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button size="icon" variant="ghost">
-					<Pencil className="h-4 w-4 text-muted-foreground hover:text-muted-foreground" />
+				<Button
+					size="icon-sm"
+					variant="ghost"
+					aria-label="Editar link"
+					title="Editar link"
+					className="text-muted-foreground"
+				>
+					<Pencil aria-hidden="true" />
 				</Button>
 			</DialogTrigger>
 
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Editar Link</DialogTitle>
+					<DialogTitle>Editar link</DialogTitle>
+					<DialogDescription>
+						O link curto continua o mesmo; só o destino muda.
+					</DialogDescription>
 				</DialogHeader>
 
 				<LinkForm

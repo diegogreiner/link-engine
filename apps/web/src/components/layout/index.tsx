@@ -17,13 +17,17 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
 	}
 
 	return (
-		<div className="flex h-screen overflow-hidden bg-gray-200">
+		<div className="flex h-dvh overflow-hidden bg-background">
 			<Sidebar />
 
-			<div className="flex flex-1 flex-col">
+			<div className="flex min-w-0 flex-1 flex-col">
 				<Header />
 
-				<main className="flex-1 overflow-auto p-6">{children}</main>
+				<main className="flex-1 overflow-y-auto">
+					<div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:px-8 md:py-8">
+						{children}
+					</div>
+				</main>
 			</div>
 		</div>
 	);

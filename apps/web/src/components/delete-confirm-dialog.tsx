@@ -32,16 +32,23 @@ export function DeleteConfirmDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button size="icon" variant="ghost">
-					<Trash2 className="h-4 w-4 text-destructive" />
+				<Button
+					size="icon-sm"
+					variant="ghost"
+					aria-label="Excluir link"
+					title="Excluir link"
+					className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+				>
+					<Trash2 aria-hidden="true" />
 				</Button>
 			</DialogTrigger>
 
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Excluir link</DialogTitle>
+					<DialogTitle>Excluir link?</DialogTitle>
 					<DialogDescription>
-						Tem certeza que deseja excluir este link? Esta ação não pode ser desfeita.
+						O link curto para de funcionar e o histórico de cliques dele é
+						apagado. Não dá para desfazer.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -54,11 +61,11 @@ export function DeleteConfirmDialog({
 						Cancelar
 					</Button>
 					<Button
-						variant="destructive"
 						onClick={handleConfirm}
 						disabled={loading}
+						className="bg-destructive text-white hover:bg-destructive/90"
 					>
-						{loading ? "Excluindo..." : "Excluir"}
+						{loading ? "Excluindo..." : "Excluir link"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
