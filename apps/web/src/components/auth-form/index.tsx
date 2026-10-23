@@ -89,18 +89,13 @@ export function AuthForm({ mode }: AuthFormProps) {
 		setError("");
 		setSuccess("");
 		setIsLoading(true);
+		let accountCreated = false;
 
 		try {
 			if (mode === "register") {
 				await AuthService.register(values);
-
-				setSuccess("Conta criada. Levando você para o login...");
-
-				setTimeout(() => {
-					router.push("/login");
-				}, 1500);
-
-				return;
+				accountCreated = true;
+				setSuccess("Conta criada. Entrando no dashboard...");
 			}
 
 			const result = await signIn("credentials", {
@@ -109,14 +104,25 @@ export function AuthForm({ mode }: AuthFormProps) {
 				password: values.password,
 			});
 
-			if (result?.error) {
-				setError("E-mail ou senha incorretos. Confira e tente de novo.");
+			if (!result?.ok) {
+				setSuccess("");
+				setError(
+					mode === "register"
+						? "Sua conta foi criada, mas não foi possível entrar automaticamente. Tente entrar com suas credenciais."
+						: "E-mail ou senha incorretos. Confira e tente de novo.",
+				);
 				return;
 			}
 
-			router.push("/");
+			router.replace("/");
+			router.refresh();
 		} catch (error) {
-			setError(getApiErrorMessage(error));
+			setSuccess("");
+			setError(
+				accountCreated
+					? "Sua conta foi criada, mas não foi possível entrar automaticamente. Tente entrar com suas credenciais."
+					: getApiErrorMessage(error),
+			);
 		} finally {
 			setIsLoading(false);
 		}

@@ -85,8 +85,8 @@ export function LinkForm({ id, initialData, onSuccess }: LinkFormProps) {
 
 	if (createdLink) {
 		return (
-			<div className="space-y-5">
-				<div className="space-y-4 rounded-lg border border-success/25 bg-success/6 p-4">
+			<div className="min-w-0 space-y-5">
+				<div className="min-w-0 space-y-4 rounded-lg border border-success/25 bg-success/6 p-4">
 					<p className="flex items-center gap-2 font-medium text-success">
 						<CheckCircle2 className="size-4" aria-hidden="true" />
 						{id ? "Link atualizado" : "Link criado. Já pode compartilhar."}
